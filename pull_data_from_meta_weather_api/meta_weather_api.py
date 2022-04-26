@@ -1,11 +1,11 @@
-"""This module that pull data from the api and upload to in s3."""
+"""This module that pull weather information from the meat weather api 
+as json file and upload to in s3 based on partition city,year,month,day and hour."""
 import re
 import shutil
 import requests
 import configparser
 from datetime import datetime, timedelta
 import argparse
-import pandas as pd
 import json
 import os
 from s3 import S3Service
@@ -23,8 +23,12 @@ class MetaWeatherApi:
     def weather_information_using_woeid_date(self, woeid, date):
         """This method will provide the weather information based on woeid and date
         which give as paramether at endpoint  /api/location/(woeid)/(date)/"""
-        endpoint = "https://www.metaweather.com/api/location/{woeid}/{date}/".format(woeid=woeid,date=date)
-        response = requests.get(endpoint).json()
+        try:
+            endpoint = "https://www.metaweather.com/api/location/{woeid}/{date}/".format(woeid=woeid,date=date)
+            response = requests.get(endpoint).json()
+        except Exception as err:
+            print(err)
+            response = None
         return response
 
 
@@ -40,43 +44,43 @@ class PullDataFromMetaWeatherApi:
     def get_weather_information_for_given_dates(self):
         """This method will get the weather information from start date to end date"""
         if self.e_date:
-            for n in range(int((self.s_date - self.s_date).days)+2):
+            for n in range(int((self.e_date - self.s_date).days)+1):
                 date = self.s_date+timedelta(n)
-                print(type(date))
+                print(date)
                 self.get_weather_information(date)
+        else :
+            self.get_weather_information(self.s_date)
+            
 
     def get_weather_information(self,date):
         """This method used to get the woeid of city from api"""
         search_date = date.strftime("%Y/%m/%d")
         for key, value in self.woeid_date.items():
-            print(key)
-            print(value)
             response = self.metaweather.weather_information_using_woeid_date(
                 value, search_date
             )
             self.get_given_date_response(response, key,date)
-
-            return
+        return response
 
     def get_given_date_response(self, response, city,date):
         """This method used to get only required date of information alone"""
         date = date.strftime('%Y-%m-%d')
-        print(date)
         for information in response:
             if date in information["created"]:
                 with open(
                     self.path + city + "_" + information["created"] + ".json", "w"
                 ) as file:
                     json.dump(information, file)
-                    print("success")
-                    return
+                    print("successfully created json file in local")
+        return True
 
     def upload_to_s3(self):
         """This method used to upload the file to s3 which data got from api"""
         s3_service = S3Service()
         for file in os.listdir(self.path):
             key = self.get_partition_path(file)+file
-            s3_service.upload_file(self.path + file, key)
+            response = s3_service.upload_file(self.path + file, key)
+        return response
     
     def upload_dummy_local_s3(self):
         for file in os.listdir(self.path):
@@ -100,12 +104,8 @@ class PullDataFromMetaWeatherApi:
         return partition_path
 
 def get_date(datestr):
-    return datetime.strptime(datestr, "%Y-%m-%d").date()
-
-
-def current_date():
-    return datetime.now().date() - timedelta(1)
-
+    """This is the function that returns the date object to the type of s_date argparser argument"""
+    return  datetime.strptime(datestr, "%Y-%m-%d").date()
 
 def main():
     """This is the main method for the module api_connection"""
@@ -114,12 +114,11 @@ def main():
         "--s_date", type=get_date, help="Enter date for pull data", default=datetime.now().date() - timedelta(1)
     )
     parser.add_argument(
-        "--e_date", type=get_date, help="Enter date for pull data"
+        "--e_date", type=get_date, help="Enter date for pull data",
     )
     args = parser.parse_args()
     pull_data = PullDataFromMetaWeatherApi(args.s_date,args.e_date)
     pull_data.get_weather_information_for_given_dates()
-    # city_woeid = pull_data.get_weather_information()
     # pull_data.upload_to_s3()
     pull_data.upload_dummy_local_s3()
 
