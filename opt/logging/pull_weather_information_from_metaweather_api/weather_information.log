@@ -1,4 +1,114 @@
-26-Apr-22 15:53:15 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
-26-Apr-22 15:53:27 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
-26-Apr-22 16:09:36 - INFO - pull_weather_information_from_metaweather_api.py:46 - Object successfully created!!!
-26-Apr-22 16:42:39 - INFO - pull_weather_information_from_metaweather_api.py:46 - Object successfully created!!!
+27-Apr-22 16:15:29 - INFO - pull_weather_information_from_metaweather_api.py:45 - Object successfully created!!!
+27-Apr-22 16:15:29 - INFO - s3.py:17 - BUBSIUBSB
+27-Apr-22 16:55:15 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 16:55:15 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 16:55:15 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 16:55:17 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 16:58:14 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 16:58:14 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 16:58:14 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 16:58:15 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:12:55 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:12:55 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 17:12:55 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 17:12:57 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:22:27 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:22:27 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 17:22:27 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 17:22:29 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:22:53 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:22:53 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 17:22:53 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 17:22:54 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:23:10 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:23:10 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 17:23:10 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 17:23:12 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:23:27 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:23:27 - INFO - pull_weather_information_from_metaweather_api.py:47 - Object successfully created!!!
+27-Apr-22 17:23:27 - INFO - pull_weather_information_from_metaweather_api.py:61 - The script retrieves weather information for yesterday
+27-Apr-22 17:23:29 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:31:49 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:31:49 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:31:49 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:31:51 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:33:05 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:33:05 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:33:05 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:33:07 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:33:25 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:33:25 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:33:25 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:33:27 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:34:21 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:34:21 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:34:21 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:34:22 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:35:20 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:35:20 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:35:20 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:35:21 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:36:14 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:36:14 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:36:14 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:36:16 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:37:14 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:37:14 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:37:14 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:37:15 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:44:21 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:44:21 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:44:21 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:44:22 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:44:40 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:44:40 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:44:40 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:44:41 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:45:13 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:45:13 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:45:13 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:45:14 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:46:02 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:46:02 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:46:02 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:46:04 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:46:15 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:46:15 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:46:15 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:46:16 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:47:21 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:47:21 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:47:21 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:47:23 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 17:54:20 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 17:54:20 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 17:54:20 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 17:54:22 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:14:20 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:14:20 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:14:20 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:14:21 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:14:38 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:14:38 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:14:38 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:14:39 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:35:21 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:35:21 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:35:21 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:35:23 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:37:10 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:37:10 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:37:10 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:37:11 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:37:55 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:37:55 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:37:55 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:37:56 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:38:58 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:38:58 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:38:58 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:38:59 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
+27-Apr-22 18:39:27 - INFO - metaweather_api.py:8 - Object created successfully for the class MetaWeatherApi
+27-Apr-22 18:39:27 - INFO - pull_weather_information_from_metaweather_api.py:48 - Object successfully created!!!
+27-Apr-22 18:39:27 - INFO - pull_weather_information_from_metaweather_api.py:62 - The script retrieves weather information for yesterday
+27-Apr-22 18:39:28 - INFO - metaweather_api.py:16 - Weather information sucessfully retrieved for2022/04/26 and 2471390
