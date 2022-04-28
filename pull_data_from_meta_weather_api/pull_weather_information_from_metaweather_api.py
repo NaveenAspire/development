@@ -77,11 +77,11 @@ class PullWeatherInformationFromMetaWeatherApi:
                 epoch = int(time())
                 file_name = "metaweather_{city}_{epoch}.json".format(city=city, epoch=epoch)
                 new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
-                # key = self.get_partition_path(city,t_str)+'/'+file_name
-                # self.upload_to_s3(self.path+'/'+file_name,key)
-                self.upload_to_dummy_s3(
-                    self.path + "/" + file_name, self.get_partition_path(city, t_str)
-                )
+                key = self.get_partition_path(city,t_str)+'/'+file_name
+                self.upload_to_s3(self.path+'/'+file_name,key)
+                # self.upload_to_dummy_s3(
+                #     self.path + "/" + file_name, self.get_partition_path(city, t_str)
+                # )
         return True
 
     def upload_to_s3(self, file, key):
