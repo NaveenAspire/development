@@ -10,6 +10,7 @@ import logging
 import os
 import sys
 from this import d
+from time import time
 
 import pandas as pd
 from dummy_S3.dummy_s3 import DummyS3
@@ -43,7 +44,8 @@ class PullWeatherInformationFromMetaWeatherApi:
         )
         self.s_date = s_date
         self.e_date = e_date
-        self.path = os.path.join(os.getcwd(), config["local"]["local_file_path"])
+        self.path = os.path.join(parent_dir, config["local"]["local_file_path"],'meta_weather')
+        os.makedirs(self.path,exist_ok=True)
         self.metaweather = MetaWeatherApi(logger)
         logger.info("Object successfully created!!!")
 
@@ -84,18 +86,11 @@ class PullWeatherInformationFromMetaWeatherApi:
         df = pd.DataFrame(response)
         for i in range(2):
             t_str = '{date}T{hour}'.format(date=date,hour=str(i).zfill(2))
-            print(t_str)
             new_df = df[(df.created.str.contains(t_str))]
-            print(new_df.created)
-        # cre = df.created[0].split(':')[0]
-        # new_df = df[(df.created.str.contains(cre))]
-        # print(cre)
-        # for information in response:
-        #     if date in information["created"]:
-        #         with open(self.path + city + "_" + information["created"] + ".json", "w") as file:
-        #             json.dump(information, file)
-        #             print("successfully created json file in local")
-        #             logging.info("The script retrieved weather information for "+date)
+            if not new_df.empty:
+                epoch = int(time())
+                file_name = 'metaweather_{city}_{epoch}.json'.format(city=city,epoch=epoch)
+                new_df.to_json(self.path+'/'+file_name,orient='records',lines=True)
         return True
 
     def upload_to_s3(self):
