@@ -62,8 +62,7 @@ class PullWeatherInformationFromMetaWeatherApi:
     def get_weather_information_between_two_dates(self,start,end):
         """This method will get the information between two dates of response"""
         while start <= end:
-            # self.get_weather_information(start)
-            print(start)
+            self.get_weather_information(start)
             start = start + timedelta(1)
     
     def get_weather_information(self, date):
@@ -160,4 +159,3 @@ def set_last_run():
 if __name__ == "__main__":
     main()
     set_last_run()
-    # print("sdfsd")
