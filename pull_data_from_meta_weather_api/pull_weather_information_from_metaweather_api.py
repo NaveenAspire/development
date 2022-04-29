@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import argparse
 import logging
 import os
+from re import S
 import sys
 from time import time
 
@@ -48,14 +49,23 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def get_weather_information_for_given_dates(self):
         """This method will get the weather information from start date to end date"""
-        last_run = config["pull_weather_information_from_metaweather_api"]["last_date"]
-        if last_run and self.s_date == self.e_date and get_date(last_run) < self.s_date:
-            last_run = datetime.strptime(last_run, "%Y-%m-%d").date()
-            self.s_date = last_run
-        while self.s_date <= self.e_date:
-            self.get_weather_information(self.s_date)
-            self.s_date = self.s_date + timedelta(1)
-
+        check_date = datetime.now().date() - timedelta(1)
+        last_run =get_date(config["pull_weather_information_from_metaweather_api"]["last_date"])
+        if self.s_date and self.e_date:
+            self.get_weather_information_between_two_dates(self.s_date,self.e_date)
+            sys.exit()
+        elif last_run and last_run < check_date:
+            self.get_weather_information_between_two_dates(last_run,check_date)
+        else :
+            print(check_date)
+            self.get_weather_information(check_date)
+    def get_weather_information_between_two_dates(self,start,end):
+        """This method will get the information between two dates of response"""
+        while start <= end:
+            # self.get_weather_information(start)
+            print(start)
+            start = start + timedelta(1)
+    
     def get_weather_information(self, date):
         """This method used to get the woeid of city from api"""
         search_date = date.strftime("%Y/%m/%d")
@@ -112,7 +122,11 @@ class PullWeatherInformationFromMetaWeatherApi:
 
 def get_date(datestr):
     """This is the function that returns the date object to the type of s_date argparser argument"""
-    return datetime.strptime(datestr, "%Y-%m-%d").date()
+    try:
+        date_obj = datetime.strptime(datestr, "%Y-%m-%d").date()
+    except Exception as err:
+        return None
+    return date_obj
 
 
 def main():
@@ -128,7 +142,6 @@ def main():
         "--e_date",
         type=get_date,
         help="Enter date for pull data",
-        default=datetime.now().date() - timedelta(1),
     )
     args = parser.parse_args()
     pull_data = PullWeatherInformationFromMetaWeatherApi(args.s_date, args.e_date)
