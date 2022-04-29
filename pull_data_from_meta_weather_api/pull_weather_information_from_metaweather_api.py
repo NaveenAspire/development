@@ -51,15 +51,16 @@ class PullWeatherInformationFromMetaWeatherApi:
         check_date = datetime.now().date() - timedelta(1)
         last_run = get_date(config["pull_weather_information_from_metaweather_api"]["last_date"])
         if self.s_date and self.e_date:
-            self.get_weather_information_between_two_dates(self.s_date, self.e_date)
+            response = self.get_weather_information_between_two_dates(self.s_date, self.e_date)
             logging.info("weather information took for start date to end date")
             sys.exit()
         elif last_run and last_run < check_date:
-            self.get_weather_information_between_two_dates(last_run, check_date)
+            response =self.get_weather_information_between_two_dates(last_run, check_date)
             logging.info("weather information took for last run date to yesterday's date")
         else:
-            self.get_weather_information(check_date)
+            response =self.get_weather_information(check_date)
             logging.info("weather information took for yesterday's date")
+        return response
 
     def get_weather_information_between_two_dates(self, start, end):
         """This method will get the information between two dates of response"""
@@ -67,6 +68,7 @@ class PullWeatherInformationFromMetaWeatherApi:
             self.get_weather_information(start)
             logging.info(f"weather information successfully took for {start}")
             start = start + timedelta(1)
+            
 
     def get_weather_information(self, date):
         """This method used to get the woeid of city from api"""
@@ -96,9 +98,9 @@ class PullWeatherInformationFromMetaWeatherApi:
         file_name = f"metaweather_{city}_{epoch}.json"
         new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
         key = self.get_partition_path(city, t_str) + "/" + file_name
-        # self.upload_to_s3(self.path + "/" + file_name, key)
-        self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
-        print(key +" is uploaded")
+        self.upload_to_s3(self.path + "/" + file_name, key)
+        # self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
+        # print(key +" is uploaded")
 
     def upload_to_s3(self, file, key):
         """This method used to upload the file to s3 which data got from api"""

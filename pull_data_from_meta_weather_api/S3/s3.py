@@ -30,8 +30,7 @@ class S3Service:
         """This method is used to upload the file into s3 bucket"""
         try:
             key = self.bucket_path + key
-            self.s3_obj.upload_file(
-                self.local_path + file,
+            self.s3_obj.upload_file(file,
                 self.bucket_name,
                 key
             )
