@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import argparse
 import logging
 import os
-from re import S
 import sys
 from time import time
 
@@ -50,21 +49,25 @@ class PullWeatherInformationFromMetaWeatherApi:
     def get_weather_information_for_given_dates(self):
         """This method will get the weather information from start date to end date"""
         check_date = datetime.now().date() - timedelta(1)
-        last_run =get_date(config["pull_weather_information_from_metaweather_api"]["last_date"])
+        last_run = get_date(config["pull_weather_information_from_metaweather_api"]["last_date"])
         if self.s_date and self.e_date:
-            self.get_weather_information_between_two_dates(self.s_date,self.e_date)
+            self.get_weather_information_between_two_dates(self.s_date, self.e_date)
+            logging.info("weather information took for start date to end date")
             sys.exit()
         elif last_run and last_run < check_date:
-            self.get_weather_information_between_two_dates(last_run,check_date)
-        else :
-            print(check_date)
+            self.get_weather_information_between_two_dates(last_run, check_date)
+            logging.info("weather information took for last run date to yesterday's date")
+        else:
             self.get_weather_information(check_date)
-    def get_weather_information_between_two_dates(self,start,end):
+            logging.info("weather information took for yesterday's date")
+
+    def get_weather_information_between_two_dates(self, start, end):
         """This method will get the information between two dates of response"""
         while start <= end:
             self.get_weather_information(start)
+            logging.info(f"weather information successfully took for {start}")
             start = start + timedelta(1)
-    
+
     def get_weather_information(self, date):
         """This method used to get the woeid of city from api"""
         search_date = date.strftime("%Y/%m/%d")
@@ -83,15 +86,19 @@ class PullWeatherInformationFromMetaWeatherApi:
             t_str = "{date}T{hour}".format(date=date, hour=str(i).zfill(2))
             new_df = res_df[(res_df.created.str.contains(t_str))]
             if not new_df.empty:
-                epoch = int(time())
-                file_name = "metaweather_{city}_{epoch}.json".format(city=city, epoch=epoch)
-                new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
-                key = self.get_partition_path(city,t_str)+'/'+file_name
-                self.upload_to_s3(self.path+'/'+file_name,key)
-                # self.upload_to_dummy_s3(
-                #     self.path + "/" + file_name, self.get_partition_path(city, t_str)
-                # )
+                self.create_json_file(new_df, city, t_str)
         return True
+
+    def create_json_file(self, new_df, city, t_str):
+        """This method is used for create the json file for the weather information
+        record as same hour"""
+        epoch = int(time())
+        file_name = f"metaweather_{city}_{epoch}.json"
+        new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
+        key = self.get_partition_path(city, t_str) + "/" + file_name
+        # self.upload_to_s3(self.path + "/" + file_name, key)
+        self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
+        print(key +" is uploaded")
 
     def upload_to_s3(self, file, key):
         """This method used to upload the file to s3 which data got from api"""
@@ -101,7 +108,7 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def upload_to_dummy_s3(self, source, partition_path):
         """This method used to upload the file to dummy s3 which data got from api"""
-        dummy_s3 = DummyS3(config)
+        dummy_s3 = DummyS3(config, logger)
         response = dummy_s3.upload_dummy_local_s3(source, partition_path)
         return response
 
@@ -110,10 +117,7 @@ class PullWeatherInformationFromMetaWeatherApi:
         try:
             date_obj = datetime.strptime(t_str, "%Y-%m-%dT%H")
             partition_path = date_obj.strftime(
-                "pt_city={city_name}/pt_year=%Y/pt_month=%m/pt_day=%d/pt_hour=%H/".format(
-                    city_name=city
-                )
-            )
+                f"pt_city={city}/pt_year=%Y/pt_month=%m/pt_day=%d/pt_hour=%H/")
         except Exception as err:
             print(err)
         return partition_path
@@ -124,6 +128,7 @@ def get_date(datestr):
     try:
         date_obj = datetime.strptime(datestr, "%Y-%m-%d").date()
     except Exception as err:
+        print(err)
         return None
     return date_obj
 
@@ -152,7 +157,7 @@ def set_last_run():
     config.set(
         "pull_weather_information_from_metaweather_api", "last_date", str(datetime.now().date())
     )
-    with open(parent_dir + "/develop.ini", "w",encoding='utf-8') as file:
+    with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
         config.write(file)
 
 
