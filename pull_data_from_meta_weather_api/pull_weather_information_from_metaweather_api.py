@@ -41,6 +41,7 @@ class PullWeatherInformationFromMetaWeatherApi:
         )
         self.s_date = s_date
         self.e_date = e_date
+        self.last_run = get_date(config["pull_weather_information_from_metaweather_api"]["last_date"])
         self.path = os.path.join(parent_dir, config["local"]["local_file_path"], "meta_weather")
         os.makedirs(self.path, exist_ok=True)
         self.metaweather = MetaWeatherApi(logger)
@@ -49,13 +50,13 @@ class PullWeatherInformationFromMetaWeatherApi:
     def get_weather_information_for_given_dates(self):
         """This method will get the weather information from start date to end date"""
         check_date = datetime.now().date() - timedelta(1)
-        last_run = get_date(config["pull_weather_information_from_metaweather_api"]["last_date"])
+        
         if self.s_date and self.e_date:
             response = self.get_weather_information_between_two_dates(self.s_date, self.e_date)
             logging.info("weather information took for start date to end date")
             sys.exit()
-        elif last_run and last_run < check_date:
-            response =self.get_weather_information_between_two_dates(last_run, check_date)
+        elif self.last_run and self.last_run < check_date:
+            response =self.get_weather_information_between_two_dates(self.last_run, check_date)
             logging.info("weather information took for last run date to yesterday's date")
         else:
             response =self.get_weather_information(check_date)
@@ -64,11 +65,13 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def get_weather_information_between_two_dates(self, start, end):
         """This method will get the information between two dates of response"""
+        dates = []
         while start <= end:
             self.get_weather_information(start)
             logging.info(f"weather information successfully took for {start}")
+            dates = dates.append(start)
             start = start + timedelta(1)
-            
+        return dates    
 
     def get_weather_information(self, date):
         """This method used to get the woeid of city from api"""
