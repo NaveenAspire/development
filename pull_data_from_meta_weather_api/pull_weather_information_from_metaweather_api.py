@@ -65,12 +65,16 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def get_weather_information_between_two_dates(self, start, end):
         """This method will get the information between two dates of response"""
-        dates = []
-        while start <= end:
-            self.get_weather_information(start)
-            logging.info(f"weather information successfully took for {start}")
-            dates = dates.append(start)
-            start = start + timedelta(1)
+        try:
+            dates = []
+            while start <= end:
+                self.get_weather_information(start)
+                logging.info(f"weather information successfully took for {start}")
+                dates = dates.append(start)
+                start = start + timedelta(1)
+        except Exception as err:
+            print(err)
+            dates = None
         return dates    
 
     def get_weather_information(self, date):
@@ -85,25 +89,33 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def get_given_date_response(self, response, city, date):
         """This method used to get only required date of information alone"""
-        date = date.strftime("%Y-%m-%d")
-        res_df = pd.DataFrame(response)
-        for i in range(24):
-            t_str = "{date}T{hour}".format(date=date, hour=str(i).zfill(2))
-            new_df = res_df[(res_df.created.str.contains(t_str))]
-            if not new_df.empty:
-                self.create_json_file(new_df, city, t_str)
+        try:
+            date = date.strftime("%Y-%m-%d")
+            res_df = pd.DataFrame(response)
+            for i in range(24):
+                t_str = "{date}T{hour}".format(date=date, hour=str(i).zfill(2))
+                new_df = res_df[(res_df.created.str.contains(t_str))]
+                if not new_df.empty:
+                    self.create_json_file(new_df, city, t_str)
+        except Exception as err:
+            print(err)
+            return False
         return True
 
     def create_json_file(self, new_df, city, t_str):
         """This method is used for create the json file for the weather information
         record as same hour"""
-        epoch = int(time())
-        file_name = f"metaweather_{city}_{epoch}.json"
-        new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
-        key = self.get_partition_path(city, t_str) + "/" + file_name
-        self.upload_to_s3(self.path + "/" + file_name, key)
-        # self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
-        # print(key +" is uploaded")
+        try :
+            epoch = int(time())
+            file_name = f"metaweather_{city}_{epoch}.json"
+            new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
+            key = self.get_partition_path(city, t_str) + "/" + file_name
+            self.upload_to_s3(self.path + "/" + file_name, key)
+            # self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
+            # print(key +" is uploaded")
+        except Exception as err:
+            return None
+        return self.path+'/'+file_name
 
     def upload_to_s3(self, file, key):
         """This method used to upload the file to s3 which data got from api"""
