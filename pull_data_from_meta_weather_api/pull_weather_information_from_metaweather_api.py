@@ -49,17 +49,21 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def get_weather_information_for_given_dates(self):
         """This method will get the weather information from start date to end date"""
-        check_date = datetime.now().date() - timedelta(1)
-        if self.s_date and self.e_date:
-            response = self.get_weather_information_between_two_dates(self.s_date, self.e_date)
-            logging.info("weather information took for start date to end date")
+        check_date = datetime.now().date()
+        if self.s_date :
+            if self.s_date < check_date:
+                response = self.get_weather_information_between_two_dates(self.s_date, self.e_date)
+                logging.info("weather information took for start date to end date")
+            print("Script ran for start and end date. So script was terminated without update last run..")
             sys.exit()
         elif self.last_run and self.last_run < check_date:
             print(self.last_run)
             response =self.get_weather_information_between_two_dates(self.last_run, check_date)
             logging.info("weather information took for last run date to yesterday's date")
         else:
-            response =self.get_weather_information(check_date)
+            data_exist = "Data available upto date..."
+            self.get_weather_information(check_date-timedelta(1)) if not self.last_run else print(data_exist)
+            response = None
             logging.info("weather information took for yesterday's date")
         return response
 
@@ -67,7 +71,7 @@ class PullWeatherInformationFromMetaWeatherApi:
         """This method will get the information between two dates of response"""
         try:
             dates = []
-            while start <= end:
+            while start < end:
                 self.get_weather_information(start)
                 logging.info(f"weather information successfully took for {start}")
                 dates.append(start)
@@ -84,6 +88,7 @@ class PullWeatherInformationFromMetaWeatherApi:
             for key, value in self.woeid_date.items():
                 response = self.metaweather.weather_information_using_woeid_date(value, search_date)
                 if response is None:
+                    print("Script was terminated due error in api response..")
                     sys.exit()
                 self.get_given_date_response(response, key, date)
                 # break #--for testcase run 
@@ -101,10 +106,11 @@ class PullWeatherInformationFromMetaWeatherApi:
                 new_df = res_df[(res_df.created.str.contains(t_str))]
                 if not new_df.empty:
                     self.create_json_file(new_df, city, t_str)
+            status = True
         except Exception as err:
             print(err)
-            return False
-        return True
+            status = False
+        return status
 
     def create_json_file(self, new_df, city, t_str):
         """This method is used for create the json file for the weather information
@@ -114,12 +120,13 @@ class PullWeatherInformationFromMetaWeatherApi:
             file_name = f"metaweather_{city}_{epoch}.json"
             new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
             key = self.get_partition_path(city, t_str) + "/" + file_name
-            self.upload_to_s3(self.path + "/" + file_name, key)
-            # self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
-            # print(key +" is uploaded")
+            # self.upload_to_s3(self.path + "/" + file_name, key)
+            self.upload_to_dummy_s3(self.path + "/" + file_name, self.get_partition_path(city, t_str))
+            print(key +" is uploaded")
+            json_file_path = self.path+'/'+file_name
         except Exception as err:
-            return None
-        return self.path+'/'+file_name
+            json_file_path =  None
+        return json_file_path
 
     def upload_to_s3(self, file, key):
         """This method used to upload the file to s3 which data got from api"""
@@ -162,12 +169,12 @@ def main():
         "--s_date",
         type=get_date,
         help="Enter date for pull data",
-        default=datetime.now().date() - timedelta(1),
     )
     parser.add_argument(
         "--e_date",
         type=get_date,
         help="Enter date for pull data",
+        default=datetime.now().date() - timedelta(1),
     )
     args = parser.parse_args()
     pull_data = PullWeatherInformationFromMetaWeatherApi(args.s_date, args.e_date)
