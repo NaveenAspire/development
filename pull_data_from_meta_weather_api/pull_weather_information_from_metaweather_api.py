@@ -50,12 +50,12 @@ class PullWeatherInformationFromMetaWeatherApi:
     def get_weather_information_for_given_dates(self):
         """This method will get the weather information from start date to end date"""
         check_date = datetime.now().date() - timedelta(1)
-        
         if self.s_date and self.e_date:
             response = self.get_weather_information_between_two_dates(self.s_date, self.e_date)
             logging.info("weather information took for start date to end date")
             sys.exit()
         elif self.last_run and self.last_run < check_date:
+            print(self.last_run)
             response =self.get_weather_information_between_two_dates(self.last_run, check_date)
             logging.info("weather information took for last run date to yesterday's date")
         else:
@@ -70,7 +70,7 @@ class PullWeatherInformationFromMetaWeatherApi:
             while start <= end:
                 self.get_weather_information(start)
                 logging.info(f"weather information successfully took for {start}")
-                dates = dates.append(start)
+                dates.append(start)
                 start = start + timedelta(1)
         except Exception as err:
             print(err)
@@ -79,13 +79,17 @@ class PullWeatherInformationFromMetaWeatherApi:
 
     def get_weather_information(self, date):
         """This method used to get the woeid of city from api"""
-        search_date = date.strftime("%Y/%m/%d")
-        for key, value in self.woeid_date.items():
-            response = self.metaweather.weather_information_using_woeid_date(value, search_date)
-            if response is None:
-                sys.exit()
-            self.get_given_date_response(response, key, date)
-        return response
+        try:
+            search_date = date.strftime("%Y/%m/%d")
+            for key, value in self.woeid_date.items():
+                response = self.metaweather.weather_information_using_woeid_date(value, search_date)
+                if response is None:
+                    sys.exit()
+                self.get_given_date_response(response, key, date)
+                # break #--for testcase run 
+        except Exception as err :
+            response = None
+        return response   
 
     def get_given_date_response(self, response, city, date):
         """This method used to get only required date of information alone"""
@@ -137,6 +141,7 @@ class PullWeatherInformationFromMetaWeatherApi:
                 f"pt_city={city}/pt_year=%Y/pt_month=%m/pt_day=%d/pt_hour=%H/")
         except Exception as err:
             print(err)
+            partition_path = None
         return partition_path
 
 
