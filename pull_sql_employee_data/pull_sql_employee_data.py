@@ -3,6 +3,7 @@ the sql server based on date of joining and then upload it to
 s3 as json file with partition which created by date of joining"""
 
 import os
+from time import time
 import pandas as pd
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
@@ -10,6 +11,7 @@ import sys
 import configparser
 import logging
 from sql import SqlConnection
+from S3.s3 import S3Service
 
 parent_dir = os.path.dirname(os.getcwd())
 config = configparser.ConfigParser()
@@ -23,7 +25,7 @@ logging.basicConfig(
     filename=log_file,
     datefmt="%d-%b-%y %H:%M:%S",
     format="%(asctime)s - %(levelname)s - %(filename)s : %(lineno)d - %(message)s",
-    level=logging.info,
+    level=logging.INFO,
     force=True,
 )
 logger = logging.getLogger()
@@ -37,60 +39,73 @@ class PullSqlEmployeeData:
         """This is the init method for the class of PullSqlEmployeeData"""
         self.s_date = s_date
         self.e_date = _e_date
-        self.last_run = ""
+        self.download_path = os.path.join(parent_dir, config["local"]["local_file_path"], "employee_sql")
         self.sql = SqlConnection(logger)
-
+        self.s3 = S3Service(logger)
     def pull_employee_data_from_sql(self):
         """This method will pull the employee data from sql
         based on given date input and upload to s3"""
-        curr_date = datetime.now().date()
+        pre_date = datetime.now().date()
         if self.s_date:
-            if self.s_date < curr_date:
-                response = self.get_employee_information_between_two_dates(self.s_date, self.e_date)
+            if self.s_date <= pre_date:
+                response = self.get_employee_information(self.s_date,self.e_date)
                 logging.info("employee information took for start date to end date")
             print(
                 "Script ran for start and end date. So script was terminated without update last run.."
             )
             sys.exit()
-        elif self.last_run and self.last_run < curr_date:
-            print(self.last_run)
-            response = self.get_employee_information_between_two_dates(self.last_run, curr_date)
-            logging.info("employee information took for last run date to yesterday's date")
-        else:
-            data_exist = "Data available upto date..."
-            self.get_employee_information(curr_date - timedelta(1)) if not self.last_run else print(
-                data_exist
-            )
-            response = None
-            logging.info("employee information took for yesterday's date")
+        response = self.get_employee_information(pre_date,self.e_date)
+        print(response)
         return response
 
-    def get_employee_information_between_two_dates(self, start, end):
-        """This method will get the employee information between two dates"""
+    def get_employee_information(self,start,end=datetime.strftime(datetime.now().date(),"%Y-%m-%d")):
+        """This method will retrieve the data based on the date passed in query."""
         try:
-            dates = []
-            while start < end and start < datetime.now().date() - timedelta(1):
-                self.get_employee_information(start)
-                logging.info(f"employee information successfully took for {start}")
-                dates.append(start)
-                start = start + timedelta(1)
+            query = f"SELECT * FROM Employee  WHERE date_of_join >= '{start}' AND date_of_join < '{end}'"
+            response = self.sql.execute_query(query)
+            column_names = [i[0] for i in response.description]
+            # response  = pd.read_sql(query,self.sql.conn)
+            data_frame = pd.DataFrame.from_records(response, columns=column_names)
+            
+            # print(data_frame)
+        except Exception as err:
+            response = None
+            print(err)
+        return response
+    
+    def create_json_file(self,data_frame,column_names):
+        """This method will create the json file for the data frame"""
+        try :
+            epoch = int(time())
+            
+            response = pd.DataFrame.to_json(data_frame,
+                                            self.download_path+f'/employee_{epoch}.json',
+                                            orient='records',lines=True,date_format='iso')
+            partition = self.get_partition(data_frame['join_date'])
+            
+        except Exception as err :
+            print(err)
+            response = None
+        return response
+    
+    def get_partition(self,join_date):
+        """This method will create the partition based on the joining date of employee"""
+        try:
+            date_obj = datetime.strptime(join_date, "%Y-%m-%d")
+            partition_path = date_obj.strftime("pt_year=%Y/pt_month=%m/pt_day=%d/")
         except Exception as err:
             print(err)
-            dates = None
-        return dates
-
-    def get_employee_information(self, doj):
-        try:
-            query = ""
-            self.sql.retrieve(query)
-        except Exception as err:
-            response = None
+            partition_path = None
+        return partition_path
+    
+    def upload_to_s3(self,file,key):
+        """This method used to upload the file to s3 which data got sql"""
+        response = self.s3.upload_file(file, key)
         return response
-
-
+    
 def get_date(date_str):
     """This is the function it will return the date format from string format"""
-    return datetime.strptime(date_str, "%d-%m-%Y")
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
 def main():
@@ -109,6 +124,7 @@ def main():
     )
     args = parser.parse_args()
     pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date)
+    pull_sql_data.pull_employee_data_from_sql()
 
 
 if __name__ == "__main__":

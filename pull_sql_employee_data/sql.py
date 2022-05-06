@@ -17,7 +17,7 @@ config.read(parent_dir + "/develop.ini")
 
 # print(conn)
 # cursor = conn.cursor()
-# cursor.execute('select * from information_schema.tables')
+# cursor.execute("select * from Employee  where date_of_join >= '2022-05-01' AND date_of_join < '2022-05-02'")
 # res = cursor.fetchall()
 
 # print(res)
@@ -57,16 +57,18 @@ class SqlConnection:
             conn = None
         return conn
 
-    def retrieve(self, query):
+    def execute_query(self, query):
         """This is method will make the sql connection with
         and return the connection object"""
         try:
             cursor = self.conn.cursor()
             cursor.execute(query)
-            response = cursor.fetchall()
             self.logger.info("Cursor is established sucessfully..")
         except Exception as err:
             self.logger.info("Connection not is established ..")
             print(err)
-            response = None
-        return response
+            cursor = None
+        return cursor
+
+
+# print(pyodbc.drivers())
