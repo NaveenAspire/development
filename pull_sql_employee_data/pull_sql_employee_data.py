@@ -106,7 +106,6 @@ class PullSqlEmployeeData:
                     lines=True,
                 )
                 key = self.get_partition(str_date) + f"employee_{epoch}.json"
-                print(key)
                 # self.s3.upload_file(self.download_path+f'/employee_{epoch}.json', key)
                 self.dummy_s3.upload_dummy_local_s3(
                     self.download_path + f"/employee_{epoch}.json",
