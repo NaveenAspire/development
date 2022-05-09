@@ -12,6 +12,7 @@ import configparser
 import logging
 from sql import SqlConnection
 from S3.s3 import S3Service
+from dummy_S3.dummy_s3 import DummyS3
 
 parent_dir = os.path.dirname(os.getcwd())
 config = configparser.ConfigParser()
@@ -40,12 +41,14 @@ class PullSqlEmployeeData:
         self.s_date = s_date
         self.e_date = _e_date
         self.download_path = os.path.join(parent_dir, config["local"]["local_file_path"], "employee_sql")
+        os.makedirs(self.download_path,exist_ok=True)
         self.sql = SqlConnection(logger)
         self.s3 = S3Service(logger)
+        self.dummy_s3 = DummyS3(config,logger)
     def pull_employee_data_from_sql(self):
         """This method will pull the employee data from sql
         based on given date input and upload to s3"""
-        pre_date = datetime.now().date()
+        pre_date = datetime.now().date() - timedelta(1)
         if self.s_date:
             if self.s_date <= pre_date:
                 response = self.get_employee_information(self.s_date,self.e_date)
@@ -64,34 +67,42 @@ class PullSqlEmployeeData:
             query = f"SELECT * FROM Employee  WHERE date_of_join >= '{start}' AND date_of_join < '{end}'"
             response = self.sql.execute_query(query)
             column_names = [i[0] for i in response.description]
-            # response  = pd.read_sql(query,self.sql.conn)
             data_frame = pd.DataFrame.from_records(response, columns=column_names)
-            
-            # print(data_frame)
+            while start < end:
+                print(start)
+                self.create_json_file(data_frame,start)
+                start = start+timedelta(1)
         except Exception as err:
             response = None
             print(err)
         return response
     
-    def create_json_file(self,data_frame,column_names):
+    def create_json_file(self,data_frame,date):
         """This method will create the json file for the data frame"""
         try :
-            epoch = int(time())
-            
-            response = pd.DataFrame.to_json(data_frame,
-                                            self.download_path+f'/employee_{epoch}.json',
-                                            orient='records',lines=True,date_format='iso')
-            partition = self.get_partition(data_frame['join_date'])
-            
+            epoch = int(time()) 
+            str_date = datetime.strftime(date,"%Y-%m-%d")
+            new_df = data_frame[(data_frame.date_of_join == date)]
+            response = None
+            if not new_df.empty:
+                print(new_df)
+                response = pd.DataFrame.to_json(new_df,
+                                                self.download_path+f'/employee_{epoch}.json',
+                                                orient='records',lines=True,date_format='iso')
+                key = self.get_partition(str_date) + f'employee_{epoch}.json'
+                # self.s3.upload_file(self.download_path+f'/employee_{epoch}.json', key)
+                self.dummy_s3.upload_dummy_local_s3(self.download_path+f'/employee_{epoch}.json',
+                                                    'sql_employee/'+self.get_partition(str_date))
         except Exception as err :
             print(err)
+            
             response = None
         return response
     
     def get_partition(self,join_date):
         """This method will create the partition based on the joining date of employee"""
         try:
-            date_obj = datetime.strptime(join_date, "%Y-%m-%d")
+            date_obj = datetime.strptime(str(join_date), "%Y-%m-%d")
             partition_path = date_obj.strftime("pt_year=%Y/pt_month=%m/pt_day=%d/")
         except Exception as err:
             print(err)
@@ -120,7 +131,7 @@ def main():
         "--e_date",
         type=get_date,
         help="Enter end date for pull data",
-        default=datetime.now().date() - timedelta(1),
+        default=datetime.now().date()
     )
     args = parser.parse_args()
     pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date)
