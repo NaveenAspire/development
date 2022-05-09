@@ -24,6 +24,7 @@ class S3Service:
         self.bucket_name = config["s3"]["bucket_name"]
         self.bucket_path = config["s3"]["bucket_path"]
         self.local_path = config["local"]["local_file_path"]
+        print(self.s3_obj)
         self.logging.info("Object created Successfully for S3Service class")
 
     def upload_file(self, file, key):

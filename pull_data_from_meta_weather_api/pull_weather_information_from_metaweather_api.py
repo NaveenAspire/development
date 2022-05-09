@@ -193,7 +193,7 @@ def main():
 def set_last_run():
     """This function that will set the last run of the script"""
     config.set(
-        "pull_weather_information_from_metaweather_api", "last_date", str(datetime.now().date())
+        "pull_sql_employee_data", "script_run", str(datetime.now().date())
     )
     with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
         config.write(file)

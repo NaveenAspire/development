@@ -1,15 +1,14 @@
 """This module is used to pull the employee information from
 the sql server based on date of joining and then upload it to
 s3 as json file with partition which created by date of joining"""
-
 import os
 from time import time
-import pandas as pd
-from datetime import datetime, timedelta
-from argparse import ArgumentParser
 import sys
 import configparser
 import logging
+from datetime import datetime, timedelta
+from argparse import ArgumentParser
+import pandas as pd
 from sql import SqlConnection
 from S3.s3 import S3Service
 from dummy_S3.dummy_s3 import DummyS3
@@ -40,66 +39,86 @@ class PullSqlEmployeeData:
         """This is the init method for the class of PullSqlEmployeeData"""
         self.s_date = s_date
         self.e_date = _e_date
-        self.download_path = os.path.join(parent_dir, config["local"]["local_file_path"], "employee_sql")
-        os.makedirs(self.download_path,exist_ok=True)
+        self.last_run = get_date(
+            config["pull_sql_employee_data"]["script_run"]
+        )
+        self.download_path = os.path.join(
+            parent_dir, config["local"]["local_file_path"], "employee_sql"
+        )
+        os.makedirs(self.download_path, exist_ok=True)
         self.sql = SqlConnection(logger)
         self.s3 = S3Service(logger)
-        self.dummy_s3 = DummyS3(config,logger)
+        self.dummy_s3 = DummyS3(config, logger)
+
     def pull_employee_data_from_sql(self):
         """This method will pull the employee data from sql
         based on given date input and upload to s3"""
         pre_date = datetime.now().date() - timedelta(1)
         if self.s_date:
             if self.s_date <= pre_date:
-                response = self.get_employee_information(self.s_date,self.e_date)
+                response = self.get_employee_information(self.s_date, self.e_date)
                 logging.info("employee information took for start date to end date")
             print(
-                "Script ran for start and end date. So script was terminated without update last run.."
+                "Script ran for start and end date."+
+                "So script was terminated without update last run.."
             )
             sys.exit()
-        response = self.get_employee_information(pre_date,self.e_date)
-        print(response)
+        elif self.last_run <= pre_date:
+            response = self.get_employee_information(pre_date, self.e_date)
+        else :
+            print("Data available upto date...")
+            response = None
         return response
 
-    def get_employee_information(self,start,end=datetime.strftime(datetime.now().date(),"%Y-%m-%d")):
+    def get_employee_information(
+        self, start, end=datetime.strftime(datetime.now().date(), "%Y-%m-%d")
+    ):
         """This method will retrieve the data based on the date passed in query."""
         try:
-            query = f"SELECT * FROM Employee  WHERE date_of_join >= '{start}' AND date_of_join < '{end}'"
+            query = "SELECT * FROM Employee  WHERE date_of_join >="\
+                f"'{start}' AND date_of_join < '{end}'"
             response = self.sql.execute_query(query)
             column_names = [i[0] for i in response.description]
             data_frame = pd.DataFrame.from_records(response, columns=column_names)
             while start < end:
-                print(start)
-                self.create_json_file(data_frame,start)
-                start = start+timedelta(1)
+                # print(start)
+                self.create_json_file(data_frame, start)
+                start = start + timedelta(1)
         except Exception as err:
             response = None
             print(err)
         return response
-    
-    def create_json_file(self,data_frame,date):
+
+    def create_json_file(self, data_frame, date):
         """This method will create the json file for the data frame"""
-        try :
-            epoch = int(time()) 
-            str_date = datetime.strftime(date,"%Y-%m-%d")
+        try:
+            epoch = int(time())
+            str_date = datetime.strftime(date, "%Y-%m-%d")
             new_df = data_frame[(data_frame.date_of_join == date)]
             response = None
             if not new_df.empty:
-                print(new_df)
-                response = pd.DataFrame.to_json(new_df,
-                                                self.download_path+f'/employee_{epoch}.json',
-                                                orient='records',lines=True,date_format='iso')
-                key = self.get_partition(str_date) + f'employee_{epoch}.json'
+                # print(new_df)
+                new_df = new_df.astype({'date_of_birth':str,'date_of_join':str})
+                response = pd.DataFrame.to_json(
+                    new_df,
+                    self.download_path + f"/employee_{epoch}.json",
+                    orient="records",
+                    lines=True,
+                )
+                key = self.get_partition(str_date) + f"employee_{epoch}.json"
+                print(key)
                 # self.s3.upload_file(self.download_path+f'/employee_{epoch}.json', key)
-                self.dummy_s3.upload_dummy_local_s3(self.download_path+f'/employee_{epoch}.json',
-                                                    'sql_employee/'+self.get_partition(str_date))
-        except Exception as err :
+                self.dummy_s3.upload_dummy_local_s3(
+                    self.download_path + f"/employee_{epoch}.json",
+                    "sql_employee/" + self.get_partition(str_date),
+                )
+        except Exception as err:
             print(err)
-            
+
             response = None
         return response
-    
-    def get_partition(self,join_date):
+
+    def get_partition(self, join_date):
         """This method will create the partition based on the joining date of employee"""
         try:
             date_obj = datetime.strptime(str(join_date), "%Y-%m-%d")
@@ -108,16 +127,24 @@ class PullSqlEmployeeData:
             print(err)
             partition_path = None
         return partition_path
-    
-    def upload_to_s3(self,file,key):
+
+    def upload_to_s3(self, file, key):
         """This method used to upload the file to s3 which data got sql"""
         response = self.s3.upload_file(file, key)
         return response
-    
+
+
 def get_date(date_str):
     """This is the function it will return the date format from string format"""
     return datetime.strptime(date_str, "%Y-%m-%d").date()
 
+def set_last_run():
+    """This function that will set the last run of the script"""
+    config.set(
+        "pull_sql_employee_data", "script_run", str(datetime.now().date())
+    )
+    with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
+        config.write(file)
 
 def main():
     """This the main method for the module pull_sql_employee_data"""
@@ -131,7 +158,7 @@ def main():
         "--e_date",
         type=get_date,
         help="Enter end date for pull data",
-        default=datetime.now().date()
+        default=datetime.now().date(),
     )
     args = parser.parse_args()
     pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date)
@@ -140,3 +167,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    set_last_run()
