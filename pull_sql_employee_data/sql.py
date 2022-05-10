@@ -71,17 +71,26 @@ class SqlConnection:
             cursor = None
         return cursor
     
-    def where_query(self,start=None,end=None,con_param='=',exclude=False):
+    def where_query(self,table,column,start,end=None,con_param='=',exclude=False):
         """This method will retrieve the data based on the where query conditions"""
-        if not end :
-            query = f"SELECT * FROM Employee  WHERE date_of_join {con_param}"\
-                f"'{start}'"
-        else :
-            end = end if exclude else end - timedelta(1)
-            query = "SELECT * FROM Employee  WHERE date_of_join "\
-                f"{con_param}'{start}' AND '{end}'"
-            print(query)
-        response = self.execute_query(query)
+        try :
+            con_param = con_param.upper()
+            if not end and con_param != 'BETWEEN' :
+                query = f"SELECT * FROM {table}  WHERE {column} {con_param}"\
+                    f"'{start}'"
+                response = self.execute_query(query)
+            elif end and con_param == 'BETWEEN' :
+                end = end if exclude else end - timedelta(1)
+                print(type(exclude))
+                query = f"SELECT * FROM {table}  WHERE {column} "\
+                    f"{con_param}'{start}' AND '{end}'"
+                response = self.execute_query(query)
+            else :
+                print("You were given wrong operator for given date")
+                response = None
+        except Exception as err :
+            print(err)
+            response = None
         return response
         
 

@@ -35,14 +35,13 @@ class PullSqlEmployeeData:
     """This is the class that contains methods for the pull the
     employee data from sql and upload to s3 as json with partition"""
 
-    def __init__(self, s_date, _e_date,con_param) -> None:
+    def __init__(self, s_date, _e_date, con_param, exclude) -> None:
         """This is the init method for the class of PullSqlEmployeeData"""
         self.s_date = s_date
         self.e_date = _e_date
         self.con_param = con_param
-        self.last_run = get_date(
-            config["pull_sql_employee_data"]["script_run"]
-        )
+        self.exclude = exclude
+        self.last_run = get_date(config["pull_sql_employee_data"]["script_run"])
         self.download_path = os.path.join(
             parent_dir, config["local"]["local_file_path"], "employee_sql"
         )
@@ -60,13 +59,13 @@ class PullSqlEmployeeData:
                 response = self.get_employee_information(self.s_date, self.e_date)
                 logging.info("employee information took for start date to end date")
             print(
-                "Script ran for start and end date."+
-                "So script was terminated without update last run.."
+                "Script ran for start and end date."
+                + "So script was terminated without update last run.."
             )
             sys.exit()
         elif self.last_run <= pre_date:
             response = self.get_employee_information(pre_date, self.e_date)
-        else :
+        else:
             print("Data available upto date...")
             response = None
         return response
@@ -76,8 +75,10 @@ class PullSqlEmployeeData:
     ):
         """This method will retrieve the data based on the date passed in query."""
         try:
-            query = "SELECT * FROM Employee  WHERE date_of_join >="\
+            query = (
+                "SELECT * FROM Employee  WHERE date_of_join >="
                 f"'{start}' AND date_of_join < '{end}'"
+            )
             response = self.sql.execute_query(query)
             column_names = [i[0] for i in response.description]
             data_frame = pd.DataFrame.from_records(response, columns=column_names)
@@ -88,25 +89,33 @@ class PullSqlEmployeeData:
             response = None
             print(err)
         return response
-    
+
     def get_employee_data_where(self):
         """This method will pass the date and condition to where query
         and get employee data based on paased values"""
         try:
-            response = self.sql.where_query(start=self.s_date,end=self.e_date,con_param=self.con_param)
+            if not self.e_date and self.s_date == self.last_run-timedelta(1):
+                print("Data available upto date..")
+                sys.exit()
+            response = self.sql.where_query(
+                "Employee",
+                "date_of_join",
+                self.s_date,
+                end=self.e_date,
+                con_param=self.con_param,
+                exclude=self.exclude,
+            )
             column_names = [i[0] for i in response.description]
             data_frame = pd.DataFrame.from_records(response, columns=column_names)
-            start = min(data_frame['date_of_join'])
-            while start <= max(data_frame['date_of_join']):
-                # print(start)
+            start = min(data_frame["date_of_join"])
+            while start <= max(data_frame["date_of_join"]):
                 self.create_json_file(data_frame, start)
                 start = start + timedelta(1)
         except Exception as err:
             response = None
             print(err)
         return response
-        
-        
+
     def create_json_file(self, data_frame, date):
         """This method will create the json file for the data frame"""
         try:
@@ -115,7 +124,7 @@ class PullSqlEmployeeData:
             new_df = data_frame[(data_frame.date_of_join == date)]
             response = None
             if not new_df.empty:
-                new_df = new_df.astype({'date_of_birth':str,'date_of_join':str})
+                new_df = new_df.astype({"date_of_birth": str, "date_of_join": str})
                 response = pd.DataFrame.to_json(
                     new_df,
                     self.download_path + f"/employee_{epoch}.json",
@@ -154,13 +163,19 @@ def get_date(date_str):
     """This is the function it will return the date format from string format"""
     return datetime.strptime(date_str, "%Y-%m-%d").date()
 
+
 def set_last_run():
     """This function that will set the last run of the script"""
-    config.set(
-        "pull_sql_employee_data", "script_run", str(datetime.now().date())
-    )
+    config.set("pull_sql_employee_data", "script_run", str(datetime.now().date()))
     with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
         config.write(file)
+
+def get_bool(bool_str):
+    """This is the function it will return the bool format from string format"""
+    if bool_str not in {'False','True'}:
+        raise ValueError('Not a valid boolean string')
+    return True if bool_str=='True' else False
+
 
 def main():
     """This the main method for the module pull_sql_employee_data"""
@@ -169,7 +184,7 @@ def main():
         "--s_date",
         type=get_date,
         help="Enter start date for pull data",
-        default=datetime.now().date()-timedelta(1)
+        default=datetime.now().date() - timedelta(1),
     )
     parser.add_argument(
         "--e_date",
@@ -177,16 +192,15 @@ def main():
         help="Enter end date for pull data",
     )
     parser.add_argument(
-        "--con_param",
-        type=str,
-        help="Enter where condition for pull data",
-        default= '='
+        "--con_param", type=str, help="Enter where condition for pull data", default="="
+    )
+    parser.add_argument(
+        "--exclude", type=get_bool, help="Enter bool  for between end exclude or not", default=False
     )
     args = parser.parse_args()
-    pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date,args.con_param)
+    pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date, args.con_param, args.exclude)
     # pull_sql_data.pull_employee_data_from_sql()
     pull_sql_data.get_employee_data_where()
-    
 
 
 if __name__ == "__main__":
