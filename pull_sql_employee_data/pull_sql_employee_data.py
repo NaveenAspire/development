@@ -79,16 +79,15 @@ class PullSqlEmployeeData:
                 "SELECT * FROM Employee  WHERE date_of_join >="
                 f"'{start}' AND date_of_join < '{end}'"
             )
-            response = self.sql.execute_query(query)
-            column_names = [i[0] for i in response.description]
-            data_frame = pd.DataFrame.from_records(response, columns=column_names)
+            data_frame = self.sql.read_query(query)
+            print(data_frame)
             while start < end:
                 self.create_json_file(data_frame, start)
                 start = start + timedelta(1)
         except Exception as err:
-            response = None
+            data_frame = None
             print(err)
-        return response
+        return data_frame
 
     def get_employee_data_where(self):
         """This method will pass the date and condition to where query
@@ -188,6 +187,7 @@ def main():
         "--e_date",
         type=get_date,
         help="Enter end date for pull data",
+        # default=datetime.now().date(),
     )
     parser.add_argument(
         "--con_param", type=str, help="Enter where condition for pull data", default="="
@@ -203,4 +203,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    set_last_run()
+    # set_last_run()

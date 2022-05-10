@@ -1,5 +1,6 @@
 """This module will used to connect the SQL server with python using pyodbc package"""
 from datetime import datetime, timedelta
+import sys
 import pyodbc
 import configparser
 from sqlalchemy.engine import URL,create_engine
@@ -48,18 +49,20 @@ class SqlConnection:
             conn = None
         return conn
 
-    def execute_query(self, query):
+    def read_query(self, query):
         """This is method will make the sql connection with
         and return the connection object"""
         try:
-            cursor = self.conn.cursor()
-            cursor.execute(query)
+            df_list =[]
+            for chunk in pd.read_sql(query,self.conn,chunksize=1000):
+                df_list.append(chunk)
+            data_frame = pd.concat(df_list)
             self.logger.info("Cursor is established sucessfully..")
         except Exception as err:
             self.logger.info("Connection not is established ..")
             print(err)
-            cursor = None
-        return cursor
+            data_frame = None
+        return data_frame
     
     def where_query(self,table,column,start,end=None,con_param='=',exclude=False):
         """This method will retrieve the data based on the where query conditions"""
@@ -68,21 +71,23 @@ class SqlConnection:
             if not end and con_param != 'BETWEEN' :
                 query = f"SELECT * FROM {table}  WHERE {column} {con_param}"\
                     f"'{start}'"
-                response = pd.read_sql_query(query,self.conn)
             elif end and con_param == 'BETWEEN' :
                 end = end - timedelta(1) if exclude else end
                 print(type(exclude))
                 query = f"SELECT * FROM {table}  WHERE {column} "\
                     f"{con_param}'{start}' AND '{end}'"
-                response = pd.read_sql_query(query,self.conn)
             else :
                 print("You were given wrong operator for given date")
-                response = None
-            print(response)
+                sys.exit()
+            df_list =[]
+            for chunk in pd.read_sql(query,self.conn,chunksize=1000):
+                df_list.append(chunk)
+            data_frame = pd.concat(df_list)
+            print(data_frame)
         except Exception as err :
             print(err)
-            response = None
-        return response
+            data_frame = None
+        return data_frame
         
 
 
