@@ -35,10 +35,11 @@ class PullSqlEmployeeData:
     """This is the class that contains methods for the pull the
     employee data from sql and upload to s3 as json with partition"""
 
-    def __init__(self, s_date, _e_date) -> None:
+    def __init__(self, s_date, _e_date,con_param) -> None:
         """This is the init method for the class of PullSqlEmployeeData"""
         self.s_date = s_date
         self.e_date = _e_date
+        self.con_param = con_param
         self.last_run = get_date(
             config["pull_sql_employee_data"]["script_run"]
         )
@@ -81,6 +82,22 @@ class PullSqlEmployeeData:
             column_names = [i[0] for i in response.description]
             data_frame = pd.DataFrame.from_records(response, columns=column_names)
             while start < end:
+                self.create_json_file(data_frame, start)
+                start = start + timedelta(1)
+        except Exception as err:
+            response = None
+            print(err)
+        return response
+    
+    def get_employee_data_where(self):
+        """This method will pass the date and condition to where query
+        and get employee data based on paased values"""
+        try:
+            response = self.sql.where_query(start=self.s_date,end=self.e_date,con_param=self.con_param)
+            column_names = [i[0] for i in response.description]
+            data_frame = pd.DataFrame.from_records(response, columns=column_names)
+            start = min(data_frame['date_of_join'])
+            while start <= max(data_frame['date_of_join']):
                 # print(start)
                 self.create_json_file(data_frame, start)
                 start = start + timedelta(1)
@@ -88,7 +105,8 @@ class PullSqlEmployeeData:
             response = None
             print(err)
         return response
-
+        
+        
     def create_json_file(self, data_frame, date):
         """This method will create the json file for the data frame"""
         try:
@@ -97,7 +115,6 @@ class PullSqlEmployeeData:
             new_df = data_frame[(data_frame.date_of_join == date)]
             response = None
             if not new_df.empty:
-                # print(new_df)
                 new_df = new_df.astype({'date_of_birth':str,'date_of_join':str})
                 response = pd.DataFrame.to_json(
                     new_df,
@@ -152,16 +169,24 @@ def main():
         "--s_date",
         type=get_date,
         help="Enter start date for pull data",
+        default=datetime.now().date()-timedelta(1)
     )
     parser.add_argument(
         "--e_date",
         type=get_date,
         help="Enter end date for pull data",
-        default=datetime.now().date(),
+    )
+    parser.add_argument(
+        "--con_param",
+        type=str,
+        help="Enter where condition for pull data",
+        default= '='
     )
     args = parser.parse_args()
-    pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date)
-    pull_sql_data.pull_employee_data_from_sql()
+    pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date,args.con_param)
+    # pull_sql_data.pull_employee_data_from_sql()
+    pull_sql_data.get_employee_data_where()
+    
 
 
 if __name__ == "__main__":

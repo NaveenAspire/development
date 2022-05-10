@@ -1,4 +1,5 @@
 """This module will used to connect the SQL server with python using pyodbc package"""
+from datetime import datetime, timedelta
 import pyodbc
 import configparser
 import os
@@ -69,6 +70,20 @@ class SqlConnection:
             print(err)
             cursor = None
         return cursor
+    
+    def where_query(self,start=None,end=None,con_param='=',exclude=False):
+        """This method will retrieve the data based on the where query conditions"""
+        if not end :
+            query = f"SELECT * FROM Employee  WHERE date_of_join {con_param}"\
+                f"'{start}'"
+        else :
+            end = end if exclude else end - timedelta(1)
+            query = "SELECT * FROM Employee  WHERE date_of_join "\
+                f"{con_param}'{start}' AND '{end}'"
+            print(query)
+        response = self.execute_query(query)
+        return response
+        
 
 
 # print(pyodbc.drivers())
