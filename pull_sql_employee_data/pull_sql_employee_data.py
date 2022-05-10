@@ -97,7 +97,7 @@ class PullSqlEmployeeData:
             if not self.e_date and self.s_date == self.last_run-timedelta(1):
                 print("Data available upto date..")
                 sys.exit()
-            response = self.sql.where_query(
+            data_frame = self.sql.where_query(
                 "Employee",
                 "date_of_join",
                 self.s_date,
@@ -105,16 +105,14 @@ class PullSqlEmployeeData:
                 con_param=self.con_param,
                 exclude=self.exclude,
             )
-            column_names = [i[0] for i in response.description]
-            data_frame = pd.DataFrame.from_records(response, columns=column_names)
             start = min(data_frame["date_of_join"])
             while start <= max(data_frame["date_of_join"]):
                 self.create_json_file(data_frame, start)
                 start = start + timedelta(1)
         except Exception as err:
-            response = None
+            data_frame = None
             print(err)
-        return response
+        return data_frame
 
     def create_json_file(self, data_frame, date):
         """This method will create the json file for the data frame"""
