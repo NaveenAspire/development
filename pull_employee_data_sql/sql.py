@@ -15,16 +15,16 @@ class SqlConnection:
 
     def __init__(self, logger_obj) -> None:
         """This is the init method for class of SqlConnection"""
-        self.connection_string = config["sql"]["connection_string"]
+        connection_string = config["sql"]["connection_string"]
         self.logger = logger_obj
-        self.conn = self.connect()
+        self.conn = self.connect(connection_string)
         self.logger.info("Object Sucessfully created for class SqlConnection..")
 
-    def connect(self):
+    def connect(self,connection_string):
         """This is method will make the sql connection with
         and return the connection object"""
         try:
-            connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": self.connection_string})
+            connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
             conn = create_engine(connection_url)
             self.logger.info("Connection is established sucessfully..")
         except Exception as err:
@@ -52,7 +52,7 @@ class SqlConnection:
         """This method will retrieve the data based on the where query conditions"""
         try :
             con_param = con_param.upper()
-            if not end and con_param != 'BETWEEN' :
+            if not end and con_param in ['=','<','>','<=','>='] :
                 query = f"SELECT * FROM {table}  WHERE {column} {con_param}"\
                     f"'{start}'"
             elif end and con_param == 'BETWEEN' :
@@ -61,9 +61,9 @@ class SqlConnection:
                 query = f"SELECT * FROM {table}  WHERE {column} "\
                     f"{con_param}'{start}' AND '{end}'"
             else :
-                sys.exit("You were given wrong operator for given date")
+                data_frame = None
+                # sys.exit("You were given wrong operator for given date")
             data_frame = self.read_query(query)
-            print(data_frame)
         except Exception as err :
             print(err)
             data_frame = None

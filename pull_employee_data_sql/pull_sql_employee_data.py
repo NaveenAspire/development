@@ -68,9 +68,9 @@ class PullSqlEmployeeData:
             while start <= max(data_frame["date_of_join"]):
                 self.create_json_file(data_frame, start)
                 start = start + timedelta(1)
-        except Exception as err:
+        except (TypeError,ValueError):
             data_frame = None
-            print(err)
+            print("Data not available for the given date..")
         return data_frame
 
     def create_json_file(self, data_frame, date):
@@ -96,25 +96,18 @@ class PullSqlEmployeeData:
                 )
         except Exception as err:
             print(err)
-
             response = None
         return response
 
     def get_partition(self, join_date):
         """This method will create the partition based on the joining date of employee"""
         try:
-            date_obj = datetime.strptime(str(join_date), "%Y-%m-%d")
+            date_obj = datetime.strptime(join_date, "%Y-%m-%d")
             partition_path = date_obj.strftime("pt_year=%Y/pt_month=%m/pt_day=%d/")
         except Exception as err:
             print(err)
             partition_path = None
         return partition_path
-
-    def upload_to_s3(self, file, key):
-        """This method used to upload the file to s3 which data got sql"""
-        response = self.s3.upload_file(file, key)
-        return response
-
 
 def get_date(date_str):
     """This is the function it will return the date format from string format"""
@@ -152,7 +145,7 @@ def main():
         "--con_param", type=str, help="Enter where condition for pull data", default="="
     )
     parser.add_argument(
-        "--exclude", type=get_bool, help="Enter bool  for between end exclude or not", default=False
+        "--exclude", type=get_bool, help="Enter bool  for between end exclude or not", default=True
     )
     args = parser.parse_args()
     pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date, args.con_param, args.exclude)
