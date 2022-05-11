@@ -57,7 +57,7 @@ class SqlConnection:
             for chunk in pd.read_sql(query,self.conn,chunksize=1000):
                 df_list.append(chunk)
             data_frame = pd.concat(df_list)
-            self.logger.info("Cursor is established sucessfully..")
+            self.logger.info("Query read sucessfully..")
         except Exception as err:
             self.logger.info("Connection not is established ..")
             print(err)
@@ -79,10 +79,7 @@ class SqlConnection:
             else :
                 print("You were given wrong operator for given date")
                 sys.exit()
-            df_list =[]
-            for chunk in pd.read_sql(query,self.conn,chunksize=1000):
-                df_list.append(chunk)
-            data_frame = pd.concat(df_list)
+            data_frame = self.read_query(query)
             print(data_frame)
         except Exception as err :
             print(err)
