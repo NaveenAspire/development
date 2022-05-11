@@ -50,52 +50,12 @@ class PullSqlEmployeeData:
         self.s3 = S3Service(logger)
         self.dummy_s3 = DummyS3(config, logger)
 
-    def pull_employee_data_from_sql(self):
-        """This method will pull the employee data from sql
-        based on given date input and upload to s3"""
-        pre_date = datetime.now().date() - timedelta(1)
-        if self.s_date:
-            if self.s_date <= pre_date:
-                response = self.get_employee_information(self.s_date, self.e_date)
-                logging.info("employee information took for start date to end date")
-            print(
-                "Script ran for start and end date."
-                + "So script was terminated without update last run.."
-            )
-            sys.exit()
-        elif self.last_run <= pre_date:
-            response = self.get_employee_information(pre_date, self.e_date)
-        else:
-            print("Data available upto date...")
-            response = None
-        return response
-
-    def get_employee_information(
-        self, start, end=datetime.strftime(datetime.now().date(), "%Y-%m-%d")
-    ):
-        """This method will retrieve the data based on the date passed in query."""
-        try:
-            query = (
-                "SELECT * FROM Employee  WHERE date_of_join >="
-                f"'{start}' AND date_of_join < '{end}'"
-            )
-            data_frame = self.sql.read_query(query)
-            print(data_frame)
-            while start < end:
-                self.create_json_file(data_frame, start)
-                start = start + timedelta(1)
-        except Exception as err:
-            data_frame = None
-            print(err)
-        return data_frame
-
     def get_employee_data_where(self):
         """This method will pass the date and condition to where query
         and get employee data based on paased values"""
         try:
             if not self.e_date and self.s_date == self.last_run-timedelta(1):
-                print("Data available upto date..")
-                sys.exit()
+                sys.exit("Data available upto date..")
             data_frame = self.sql.where_query(
                 "Employee",
                 "date_of_join",
@@ -187,7 +147,6 @@ def main():
         "--e_date",
         type=get_date,
         help="Enter end date for pull data",
-        # default=datetime.now().date(),
     )
     parser.add_argument(
         "--con_param", type=str, help="Enter where condition for pull data", default="="
@@ -197,7 +156,6 @@ def main():
     )
     args = parser.parse_args()
     pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date, args.con_param, args.exclude)
-    # pull_sql_data.pull_employee_data_from_sql()
     pull_sql_data.get_employee_data_where()
 
 

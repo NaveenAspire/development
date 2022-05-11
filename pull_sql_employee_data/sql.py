@@ -1,7 +1,6 @@
 """This module will used to connect the SQL server with python using pyodbc package"""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import sys
-import pyodbc
 import configparser
 from sqlalchemy.engine import URL,create_engine
 import pandas as pd
@@ -10,21 +9,6 @@ import os
 parent_dir = os.path.dirname(os.getcwd())
 config = configparser.ConfigParser()
 config.read(parent_dir + "/develop.ini")
-# conn = pyodbc.connect(driver = '{ODBC Driver 17 for SQL Server}',
-#                       server = '127.0.0.1',
-#                       port='1433',
-#                       user='SA',
-#                       password='Chokiee@Naveen10',
-#                       database='Payroll'
-#                     )
-
-# print(conn)
-# cursor = conn.cursor()
-# cursor.execute("select * from Employee  where date_of_join >= '2022-05-01' AND date_of_join < '2022-05-02'")
-# res = cursor.fetchall()
-
-# print(res)
-
 
 class SqlConnection:
     """This is the class which contains methods for connecting SQL with python"""
@@ -77,8 +61,7 @@ class SqlConnection:
                 query = f"SELECT * FROM {table}  WHERE {column} "\
                     f"{con_param}'{start}' AND '{end}'"
             else :
-                print("You were given wrong operator for given date")
-                sys.exit()
+                sys.exit("You were given wrong operator for given date")
             data_frame = self.read_query(query)
             print(data_frame)
         except Exception as err :
@@ -86,6 +69,3 @@ class SqlConnection:
             data_frame = None
         return data_frame
         
-
-
-# print(pyodbc.drivers())
