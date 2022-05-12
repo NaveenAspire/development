@@ -1,6 +1,7 @@
 """This module is used to pull the employee information from
 the sql server based on date of joining and then upload it to
 s3 as json file with partition which created by date of joining"""
+from hashlib import new
 import os
 from time import time
 import sys
@@ -80,7 +81,8 @@ class PullSqlEmployeeData:
             str_date = datetime.strftime(date, "%Y-%m-%d")
             new_df = data_frame[(data_frame.date_of_join == date)]
             if not new_df.empty:
-                new_df = new_df.astype({"date_of_birth": str, "date_of_join": str})
+                date_columns = new_df.select_dtypes(include=['object']).columns.tolist()
+                new_df[date_columns] = new_df[date_columns].astype(str)
                 pd.DataFrame.to_json(
                     new_df,
                     self.download_path + f"/employee_{epoch}.json",
