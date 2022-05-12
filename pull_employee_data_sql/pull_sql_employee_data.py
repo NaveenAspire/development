@@ -79,10 +79,9 @@ class PullSqlEmployeeData:
             epoch = int(time())
             str_date = datetime.strftime(date, "%Y-%m-%d")
             new_df = data_frame[(data_frame.date_of_join == date)]
-            response = None
             if not new_df.empty:
                 new_df = new_df.astype({"date_of_birth": str, "date_of_join": str})
-                response = pd.DataFrame.to_json(
+                pd.DataFrame.to_json(
                     new_df,
                     self.download_path + f"/employee_{epoch}.json",
                     orient="records",
@@ -94,10 +93,11 @@ class PullSqlEmployeeData:
                     self.download_path + f"/employee_{epoch}.json",
                     "sql_employee/" + self.get_partition(str_date),
                 )
+                json_file = self.download_path + f"/employee_{epoch}.json"
         except Exception as err:
             print(err)
-            response = None
-        return response
+            json_file = None
+        return json_file
 
     def get_partition(self, join_date):
         """This method will create the partition based on the joining date of employee"""
@@ -111,7 +111,11 @@ class PullSqlEmployeeData:
 
 def get_date(date_str):
     """This is the function it will return the date format from string format"""
-    return datetime.strptime(date_str, "%Y-%m-%d").date()
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        date = None
+    return date
 
 
 def set_last_run():
