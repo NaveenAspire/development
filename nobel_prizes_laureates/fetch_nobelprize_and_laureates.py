@@ -36,21 +36,23 @@ class NobelprizeLaureates:
     def fetch_nobelprize_data(self,):
         """This method will used to fetch nobel prizes data from the api endpoint as dataframe"""
         response = self.nobelprize_api.fetch_nobel_prize()
-        self.create_json(response)
+        # self.create_json(response)
         print(response)
         
     
     def fetch_laureates_data(self,):
         """This method will used to fetch laureates data from the api endpoint as dataframe"""
         response = self.nobelprize_api.fetch_laureates()
+        
         self.create_json(response)
         print(response)
         
-    def create_json(self,new_df,award_year):
+    def create_json(self,data_frame,award_year):
         """This method will create the json file from the given dataframe"""
         try:
             epoch = int(time())
             file_name = f"{epoch}.json"
+            new_df = data_frame[(data_frame.award_year == award_year)]
             new_df.to_json(self.path + "/" + file_name, orient="records", lines=True)
             # self.upload_to_s3(self.path + "/" + file_name, key)
             json_file_path = self.path + "/" + file_name

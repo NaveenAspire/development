@@ -1,6 +1,6 @@
 """This module used for fetch data from nobelprize api based on the endpoint called"""
-from inspect import trace
 import requests
+import pandas as pd
 
 class NobelPrize_Api:
     """This is the class which contains methods for each endpoint to fetch data"""
@@ -20,14 +20,18 @@ class NobelPrize_Api:
                     params = f'{params}{key}={value}&'
             # print(params)
             endpoint = self.nobelprize_endpoint+params
+            df_list =[]
             while True:
                 response = requests.get(endpoint).json()
-                response.get('nobelPrizes')
+                temp_df = pd.DataFrame.from_records(response.get('nobelPrizes'))
+                df_list.append(temp_df)
                 next = response.get('links').get('next')
-                print(endpoint)
+                # print(temp_df)
                 if not next :
                     break
                 endpoint = next
+            data_frame = pd.concat(df_list)
+            print(data_frame)
         except Exception as err:
             print(err.args)
         # return response
