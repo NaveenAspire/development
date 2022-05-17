@@ -200,10 +200,62 @@ class Test_s3:
 
 class Test_fetch_nobelPrizes_laureates:
     """This class will test all success and failure cases for
-    pull_weather_information_from_metaweather_api module"""
+    fetch_nobel_prizes_laureates module"""
 
     def test_nobel_prizes_laureates_object(self,args):
-        """This method test the instance belong to the class of PullWeatherInformationFromMetaWeatherApi"""
+        """This method test the instance belong to the class of NobelprizeLaureates"""
         self.obj = NobelprizeLaureates(args)
         assert isinstance(self.obj, NobelprizeLaureates)
 
+    def test_fetch_nobelprize_data_done(self, s_date, e_date):  # --tested
+        """This method will test whether it get weather information is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        response = self.obj.fetch_nobelprize_data()
+        assert isinstance(response, list)
+
+    @pytest.mark.xfail  # tested
+    def test_fetch_nobelprize_data_not_done(self, s_date, e_date):  # --tested
+        """This method will test whether it get weather information is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        response = self.obj.fetch_nobelprize_data()
+        assert isinstance(response, list)
+
+    def test_fetch_nobelprize_data_done(self, s_date, e_date):  # --tested
+        """This method will test whether it get weather information is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        response = self.obj.fetch_laureates_data()
+        assert isinstance(response, list)
+
+    @pytest.mark.xfail  # tested
+    def test_fetch_nobelprize_data_not_done(self, s_date, e_date):  # --tested
+        """This method will test whether it get weather information is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        response = self.obj.fetch_laureates_data()
+        assert isinstance(response, list)
+
+    def test_create_json_file_done(self, s_date, e_date, api_res, city):  # --tested
+        """This method will test whether it create json file is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        res_df = pd.DataFrame(api_res)
+        response = self.obj.create_json_file(new_df, city, t_str)
+        assert os.path.isfile(response)
+
+    @pytest.mark.xfail
+    def test_create_json_file_done(self, s_date, e_date, api_res, city):  # --tested
+        """This method will test whether it create json file is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        res_df = pd.DataFrame(api_res)
+        response = self.obj.create_json_file(new_df, city, t_str)
+        assert os.path.isfile(response)
+
+    def test_get_partition_path_done(self):  # --tested
+        """This method will test whether it get paartition is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        response = self.obj.get_partition(award_year)
+        assert response == partition_path
+
+    def test_get_partition_path_done(self):  # --tested
+        """This method will test whether it get partition is sucessful"""
+        self.obj = NobelprizeLaureates(args)
+        response = self.obj.get_partition(award_year)
+        assert response == partition_path
