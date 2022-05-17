@@ -39,7 +39,7 @@ class NobelprizeLaureates:
         """This is the init method for the class NobelprizeLaureates"""
         self.year = args.nobelPrizeYear
         self.year_to = args.year_to + 1 if args.year_to else None
-        self.nobelprize_api = NobelPrize_Api(config, vars(args))
+        self.nobelprize_api = NobelPrize_Api(config)
         self.download_path = os.path.join(
             parent_dir, config["local"]["local_file_path"], "nobelPrize_laureates"
         )
@@ -47,6 +47,7 @@ class NobelprizeLaureates:
         self.dummy_s3 = DummyS3(config, logger)
         self.prize_path = config["nobel_api"]["prize_path"]
         self.laureate_path = config["nobel_api"]["laureate_path"]
+        logging.info("Object created sucessfully for class NobelprizeLaureates")
 
     def fetch_nobelprize_data(self):
         """This method will used to fetch nobel prizes data from the api endpoint as dataframe"""
@@ -54,26 +55,31 @@ class NobelprizeLaureates:
             for spec_year in range(self.year, self.year_to):
                 nobel_response = self.nobelprize_api.fetch_nobel_prize(spec_year)
                 data_frame = pd.DataFrame.from_records(nobel_response.get("nobelPrizes"))
-                self.create_json(data_frame, spec_year, self.prize_path)
+                if not data_frame.empty:
+                    self.create_json(data_frame, spec_year, self.prize_path)
+                    logging.info(f"Nobel prize data fetched for the year {spec_year}...")                
         else:
             nobel_response = self.nobelprize_api.fetch_nobel_prize(self.year)
             data_frame = pd.DataFrame.from_records(nobel_response.get("nobelPrizes"))
-            self.create_json(data_frame, self.year, self.prize_path)
-            print(data_frame)
+            if not data_frame.empty:
+                self.create_json(data_frame, self.year, self.prize_path)
+                logging.info(f"Nobel prize data fetched for the year {self.year}...")
 
-    def fetch_laureates_data(
-        self,
-    ):
+    def fetch_laureates_data(self):
         """This method will used to fetch laureates data from the api endpoint as dataframe"""
         if self.year_to:
             for spec_year in range(self.year, self.year_to):
                 laureats_response = self.nobelprize_api.fetch_laureates(spec_year)
                 data_frame = pd.DataFrame.from_records(laureats_response.get("laureates"))
-                self.create_json(data_frame, spec_year, self.laureate_path)
+                if not data_frame.empty:
+                    self.create_json(data_frame, spec_year, self.laureate_path)
+                    logging.info(f"Laureates data fetched for the year {spec_year}...")
         else:
             laureats_response = self.nobelprize_api.fetch_laureates(self.year)
             data_frame = pd.DataFrame.from_records(laureats_response.get("laureates"))
-            self.create_json(data_frame, self.year, self.laureate_path)
+            if not data_frame.empty:
+                self.create_json(data_frame, self.year, self.laureate_path)
+                logging.info(f"Laureates data fetched for the year {self.year}...")
 
     def create_json(self, data_frame, award_year, path):
         """This method will create the json file from the given dataframe"""
@@ -87,8 +93,10 @@ class NobelprizeLaureates:
                 path + self.get_partition(award_year),
             )
             json_file_path = self.download_path + "/" + file_name
-        except Exception as err:
+            logging.info(f"Json file Sucessfully created for the year {award_year}")
+        except (Exception,ValueError) as err:
             print(err)
+            logging.error(f"Json file not created for the year {award_year}")
             json_file_path = None
         return json_file_path
 

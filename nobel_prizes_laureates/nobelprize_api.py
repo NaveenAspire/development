@@ -1,15 +1,12 @@
 """This module used for fetch data from nobelprize api based on the endpoint called"""
-import sys
 import requests
-import pandas as pd
 
 class NobelPrize_Api:
     """This is the class which contains methods for each endpoint to fetch data"""
-    def __init__(self,config_obj,kwargs) -> None:
+    def __init__(self,config_obj) -> None:
         """This is the init method for the class NobelPrize_Api"""
         self.nobelprize_endpoint = config_obj["nobel_api"]["nobelprize_endpoint"]
         self.laureates_endpoint = config_obj["nobel_api"]["laureates_endpoint"]
-        self.kwargs = kwargs
         pass
     
     def fetch_nobel_prize(self,year):
