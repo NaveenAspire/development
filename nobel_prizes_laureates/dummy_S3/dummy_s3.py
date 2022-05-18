@@ -16,7 +16,7 @@ class DummyS3:
         dest = os.path.join(self.dummy_s3_path,partition_path)
         os.makedirs(dest, exist_ok=True)
         shutil.copy(source,dest)
-        self.logger.info("File successfully uploade into dummy S3")
+        self.logger.info("File successfully uploaded into dummy S3")
         return True
             
     

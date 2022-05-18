@@ -39,9 +39,9 @@ class NobelprizeLaureates:
 
     def __init__(self, args) -> None:
         """This is the init method for the class NobelprizeLaureates"""
-        self.year = args.nobelPrizeYear
+        self.year = args.nobel_prize_year
         self.year_to = args.year_to + 1 if args.year_to else None
-        self.nobelprize_api = NobelPrizeApi(config)
+        self.nobelprize_api = NobelPrizeApi(config,logger)
         self.download_path = os.path.join(
             parent_dir, config["local"]["local_file_path"], "nobelPrize_laureates"
         )
@@ -49,7 +49,6 @@ class NobelprizeLaureates:
         self.dummy_s3 = DummyS3(config, logger)
         self.prize_path = config["nobel_api"]["prize_path"]
         self.laureate_path = config["nobel_api"]["laureate_path"]
-        logging.info("Object created sucessfully for class NobelprizeLaureates")
 
     def fetch_endpoint_response(self,fetch_endpoint_data,path,data_key):
         """This method will fetch the data depends on the endpoint
@@ -68,7 +67,7 @@ class NobelprizeLaureates:
             data_frame = pd.DataFrame.from_records(response.get(data_key))
             if not data_frame.empty:
                 self.create_json(data_key, data_frame, year, path)
-                logging.info(f"Laureates data fetched for the year {self.year}...")
+                logging.info(f"{data_key} data fetched for the year {self.year}...")
         except Exception as err:
             print(err)
             data_frame = None
@@ -81,11 +80,11 @@ class NobelprizeLaureates:
             print(file_name)
             data_frame.to_json(self.download_path + "/" + file_name, orient="records", lines=True)
             # self.upload_to_s3(self.path + "/" + file_name, key)
+            logging.info(f"Json file Sucessfully created for the year {award_year}")
             self.dummy_s3.upload_dummy_local_s3(
                 os.path.join(self.download_path, file_name),
                 path + self.get_partition(award_year),
             )
-            logging.info(f"Json file Sucessfully created for the year {award_year}")
         except (Exception,ValueError) as err:
             print(err)
             logging.error(f"Json file not created for the year {award_year}")
@@ -98,15 +97,17 @@ class NobelprizeLaureates:
         except Exception as err:
             print(err)
             partition_path = None
+            logging.error(f"Json file not created for the year {award_year}")
         return partition_path
 
 
 def main():
     """This the main method for the module fetch_nobelpriz_and_laureates"""
+    logging.info("\n\nScript started to execute....")
     today_date = date.today()
     parser = argparse.ArgumentParser(description="Argparser for get input from user")
     parser.add_argument(
-        "--nobelPrizeYear",
+        "--nobel_prize_year",
         type=int, help="Enter year for fetch data",
         default= today_date.year if today_date.month >=12 and today_date.day >10 else today_date.year -1
     )
@@ -117,7 +118,9 @@ def main():
 
     args = parser.parse_args()
     nobel = NobelprizeLaureates(args)
+    logging.info("Script started to fetch nobel prize deatails....")
     nobel.fetch_endpoint_response(nobel.nobelprize_api.fetch_nobel_prize,nobel.prize_path,'nobelPrizes')
+    logging.info("Script started to fetch laureates deatails....")
     nobel.fetch_endpoint_response(nobel.nobelprize_api.fetch_laureates,nobel.laureate_path,'laureates')
 
 
