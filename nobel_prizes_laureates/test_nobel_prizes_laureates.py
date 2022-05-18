@@ -1,19 +1,24 @@
 """This is the test module for test  the fetch the nobel prizes and laureates year wise.
 And upload the information as json file with partition based on aeard year"""
+import ast
 import configparser
+from datetime import date
 import os
 import logging
 import pytest
-from time import time
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import requests
 
-from nobelprize_api import NobelPrize_Api
+from nobelprize_api import NobelPrizeApi
 from S3.s3 import S3Service
-from fetch_nobelprize_and_laureates import NobelprizeLaureates,parent_dir
+from fetch_nobelprize_and_laureates import (
+    NobelprizeLaureates,
+    get_partition,
+    parent_dir,
+)
 
 log_dir = os.path.join(parent_dir, "opt/logging/fetch_nobel_prizes_laureates/")
+os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, "fetch_nobel_prizes_laureates.log")
 logging.basicConfig(
     filename=log_file,
@@ -28,34 +33,59 @@ config = configparser.ConfigParser()
 config.read(parent_dir + "/develop.ini")
 
 
-
 @pytest.fixture
-def endpoint(woeid, api_search_date):
-    return f"https://www.metaweather.com/api/location/{woeid}/{api_search_date}/"
-
-
-@pytest.fixture
-def s_date():
-    str_date = "2022-05-01"
-    start_date = datetime.strptime(str_date, "%Y-%m-%d").date()
-    return start_date
+def year():
+    today_date = date.today()
+    year = (
+        today_date.year
+        if today_date.month >= 12 and today_date.day > 10
+        else today_date.year - 1
+    )
+    return year
 
 
 @pytest.fixture
-def e_date():
-    str_date = "2022-05-03"
-    end_date = datetime.strptime(str_date, "%Y-%m-%d").date()
-    return end_date
-
-
-@pytest.fixture
-def s_date_none():
+def year_to():
     return None
 
 
 @pytest.fixture
-def e_date_none():
-    return None
+def wrong_year():
+    return 1801
+
+
+@pytest.fixture
+def prize_endpoint(year):
+    return f"https://api.nobelprize.org/2.0/nobelPrizes?nobelPrizeYear={year}"
+
+
+@pytest.fixture
+def laureate_endpoint(year):
+    return f"https://api.nobelprize.org/2.0/laureates?nobelPrizeYear={year}"
+
+
+@pytest.fixture
+def prize_kwargs():
+    kwargs = config["nobel_api"]["prize_arguments"]
+    kwargs = ast.literal_eval(kwargs)
+    return kwargs
+
+
+@pytest.fixture
+def data_key():
+    return "nobelPrizes"
+
+
+@pytest.fixture
+def path():
+    return "nobel/source/prize/"
+
+
+@pytest.fixture
+def data_frame(data_key, prize_endpoint):
+    response = requests.get(prize_endpoint).json()
+    data_frame = pd.DataFrame.from_records(response.get(data_key))
+    return data_frame
 
 
 @pytest.fixture
@@ -64,41 +94,32 @@ def api_res(endpoint):
     print(response)
     return response
 
+
 @pytest.fixture
-def partition(t_str):
-    date_obj = datetime.strptime(t_str, "%Y-%m-%dT%H")
-    partition_path = date_obj.strftime(
-        f"pt_city={city}/pt_year=%Y/pt_month=%m/pt_day=%d/pt_hour=%H/"
-    )
+def partition(year):
+    partition_path = f"pt_year={year}"
     return partition_path
 
 
 @pytest.fixture
-def file_name(city):
-    epoch = int(time())
-    file_name = f"metaweather_{city}_{epoch}.json"
-    res_df = pd.DataFrame(api_res)
-    for i in range(24):
-        t_str = "{date}T{hour}".format(date=s_date, hour=str(i).zfill(2))
-        new_df = res_df[(res_df.created.str.contains(t_str))]
-        if not new_df.empty:
-            break
-    path = os.path.join(parent_dir, config["local"]["local_file_path"], "meta_weather")
-    new_df.to_json(path + "/" + file_name, orient="records", lines=True)
+def file_name(data_key, year):
+    file_name = f"{data_key}_{year}.json"
     return file_name
 
 
 @pytest.fixture
 def file(file_name):
     file_path = os.path.join(
-        parent_dir, config["local"]["local_file_path"], "meta_weather", file_name
+        parent_dir,
+        config["local"]["local_file_path"],
+        "nobelPrize_laureates",
+        file_name,
     )
     return file_path
 
 
 @pytest.fixture
 def key(partition, file_name):
-    date_obj = datetime.strptime(t_str, "%Y-%m-%dT%H")
     key_name = partition + file_name
     return key_name
 
@@ -120,15 +141,15 @@ class Test_nobelPrize_api:
 
     def test_metaweather_api_object(self):
         """This Method will test for the instance belong to the class MetaWeatherApi"""
-        self.obj = NobelPrize_Api(config)
-        assert isinstance(self.obj, NobelPrize_Api)
+        self.obj = NobelPrizeApi(config, logger)
+        assert isinstance(self.obj, NobelPrizeApi)
 
-    def test_fetch_nobel_prize_is_done(self, endpoint,year):
+    def test_fetch_nobel_prize_is_done(self, prize_endpoint, year):
         """This method will test fetch nobel prizes is done given year"""
-        self.obj = NobelPrize_Api(config)
+        self.obj = NobelPrizeApi(config, logger)
         try:
-            response = self.obj.fetch_nobel_prize(year)
-            result = requests.get(endpoint).json()
+            response = self.obj.fetch_prize_or_laureaes_response(prize_endpoint, year)
+            result = requests.get(prize_endpoint).json()
             print(result)
         except Exception as err:
             print(err)
@@ -136,126 +157,150 @@ class Test_nobelPrize_api:
         assert response == result
 
     @pytest.mark.xfail
-    def test_fetch_nobel_prize_not_done(self, endpoint,wrong_year):
+    def test_fetch_nobel_prize_not_done(self, prize_endpoint, wrong_year):
         """This method will test fetch nobel prizes is not done for given year"""
-        self.obj = NobelPrize_Api(config)
+        self.obj = NobelPrizeApi(config, logger)
         try:
-            response = self.obj.fetch_nobel_prize(wrong_year)
-            result = requests.get(endpoint).json()
+            response = self.obj.fetch_prize_or_laureaes_response(
+                prize_endpoint, wrong_year
+            )
+            result = requests.get(prize_endpoint).json()
             print(result)
         except Exception as err:
             print(err)
             result = None
-        assert response == result
-        
-    def test_fetch_laureates_is_done(self, endpoint,year):
+        assert response != result
+
+    def test_fetch_laureates_is_done(self, laureate_endpoint, year):
         """This method will test fetch laureates is done for given year"""
-        self.obj = NobelPrize_Api(config)
+        self.obj = NobelPrizeApi(config, logger)
         try:
-            response = self.obj.fetch_nobel_prize(year)
-            result = requests.get(endpoint).json()
+            response = self.obj.fetch_prize_or_laureaes_response(
+                laureate_endpoint, year
+            )
+            result = requests.get(laureate_endpoint).json()
             print(result)
         except Exception as err:
             print(err)
             result = None
         assert response == result
-        
+
     @pytest.mark.xfail
-    def test_fetch_laureates_not_done(self, endpoint,wrong_year):
+    def test_fetch_laureates_not_done(self, laureate_endpoint, wrong_year):
         """This method will test fetch laureates is not done for given year"""
-        self.obj = NobelPrize_Api(config)
+        self.obj = NobelPrizeApi(config, logger)
         try:
-            response = self.obj.fetch_nobel_prize(wrong_year)
-            result = requests.get(endpoint).json()
+            response = self.obj.fetch_prize_or_laureaes_response(
+                laureate_endpoint, wrong_year
+            )
+            result = requests.get(laureate_endpoint).json()
             print(result)
         except Exception as err:
             print(err)
             result = None
-        assert response == result
+        assert response != result
 
 
-class Test_s3:
-    """This class will test all success and failure cases for s3 module"""
+# class Test_s3:
+#     """This class will test all success and failure cases for s3 module"""
 
-    def test_s3_object(self):
-        """This method test the instance belong to the class of S3Service"""
-        self.s3_obj = S3Service(logger)
-        assert isinstance(self.s3_obj, S3Service)
+#     def test_s3_object(self):
+#         """This method test the instance belong to the class of S3Service"""
+#         self.s3_obj = S3Service(logger)
+#         assert isinstance(self.s3_obj, S3Service)
 
-    def test_upload_file(self,partition,key,bucket,bucket_path,file):
-        """This method will test file is sucessfully uploaded"""
-        self.my_client = S3Service(logger)
-        self.my_client.upload_file(file, key)
-        self.files = self.my_client.s3_obj.list_files(bucket, bucket_path + "/" + partition)
-        assert len(self.files) > 0
+#     def test_upload_file(self, partition, key, bucket, bucket_path, file):
+#         """This method will test file is sucessfully uploaded"""
+#         self.my_client = S3Service(logger)
+#         self.my_client.upload_file(file, key)
+#         self.files = self.my_client.s3_obj.list_files(
+#             bucket, bucket_path + "/" + partition
+#         )
+#         assert len(self.files) > 0
 
-    @pytest.mark.xfail
-    def test_upload_file_failed(self,key,bucket,bucket_path,partition,unavailable_file):
-        """This method will test file is not sucessfully uploaded"""
-        self.my_client = S3Service(logger)
-        self.my_client.upload_file(unavailable_file, key)
-        self.files = self.my_client.s3_obj.list_files(bucket, bucket_path + "/" + partition)
-        assert len(self.files) == 0
+#     @pytest.mark.xfail
+#     def test_upload_file_failed(
+#         self, key, bucket, bucket_path, partition, unavailable_file
+#     ):
+#         """This method will test file is not sucessfully uploaded"""
+#         self.my_client = S3Service(logger)
+#         self.my_client.upload_file(unavailable_file, key)
+#         self.files = self.my_client.s3_obj.list_files(
+#             bucket, bucket_path + "/" + partition
+#         )
+#         assert len(self.files) == 0
 
 
 class Test_fetch_nobelPrizes_laureates:
     """This class will test all success and failure cases for
     fetch_nobel_prizes_laureates module"""
 
-    def test_nobel_prizes_laureates_object(self,args):
+    def test_nobel_prizes_laureates_object(self, year, year_to):
         """This method test the instance belong to the class of NobelprizeLaureates"""
-        self.obj = NobelprizeLaureates(args)
+        self.obj = NobelprizeLaureates(year, year_to)
         assert isinstance(self.obj, NobelprizeLaureates)
 
-    def test_fetch_nobelprize_data_done(self, s_date, e_date):  # --tested
-        """This method will test whether it get weather information is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        response = self.obj.fetch_nobelprize_data()
-        assert isinstance(response, list)
-
-    @pytest.mark.xfail  # tested
-    def test_fetch_nobelprize_data_not_done(self, s_date, e_date):  # --tested
-        """This method will test whether it get weather information is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        response = self.obj.fetch_nobelprize_data()
-        assert isinstance(response, list)
-
-    def test_fetch_nobelprize_data_done(self, s_date, e_date):  # --tested
-        """This method will test whether it get weather information is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        response = self.obj.fetch_laureates_data()
-        assert isinstance(response, list)
-
-    @pytest.mark.xfail  # tested
-    def test_fetch_nobelprize_data_not_done(self, s_date, e_date):  # --tested
-        """This method will test whether it get weather information is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        response = self.obj.fetch_laureates_data()
-        assert isinstance(response, list)
-
-    def test_create_json_file_done(self, s_date, e_date, api_res, city):  # --tested
-        """This method will test whether it create json file is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        res_df = pd.DataFrame(api_res)
-        response = self.obj.create_json_file(new_df, city, t_str)
-        assert os.path.isfile(response)
+    def test_fetch_endpoint_response_done(self, year, year_to, prize_kwargs):
+        """This method will test whether the reponse get successfully"""
+        self.obj = NobelprizeLaureates(year, year_to)
+        response = self.obj.fetch_endpoint_response(**prize_kwargs)
+        print(response)
+        assert isinstance(response, pd.DataFrame)
 
     @pytest.mark.xfail
-    def test_create_json_file_done(self, s_date, e_date, api_res, city):  # --tested
+    def test_fetch_endpoint_response_not_done(self, year, year_to, prize_kwargs):
+        """This method will test whether the reponse not get successfully"""
+        year_to = 1000  # for failure case
+        self.obj = NobelprizeLaureates(year, year_to)
+        response = self.obj.fetch_endpoint_response(**prize_kwargs)
+        assert response is False
+
+    def test_get_dataframe_response_done(
+        self,
+        year,
+        year_to,
+        prize_kwargs,
+    ):
+        """This method will test whether response get successfully for given endpoint"""
+        self.obj = NobelprizeLaureates(year, year_to)
+        params = prize_kwargs
+        params["year"] = year
+        data_frame = self.obj.get_dataframe_response(**params)
+        assert isinstance(data_frame, pd.DataFrame)
+
+    @pytest.mark.xfail
+    def test_get_dataframe_response_not_done(self, wrong_year, year_to, prize_kwargs):
+        """This method will test whether response not get successfully for given endpoint"""
+        self.obj = NobelprizeLaureates(wrong_year, year_to)
+        params = prize_kwargs
+        params["year"] = wrong_year
+        data_frame = self.obj.get_dataframe_response(**params)
+        assert not isinstance(data_frame, pd.DataFrame)
+
+    def test_create_json_file_done(self, year, year_to, data_key, data_frame, path):
         """This method will test whether it create json file is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        res_df = pd.DataFrame(api_res)
-        response = self.obj.create_json_file(new_df, city, t_str)
-        assert os.path.isfile(response)
+        self.obj = NobelprizeLaureates(year, year_to)
+        response = self.obj.create_json(data_key, data_frame, year, path)
+        assert response is True
 
-    def test_get_partition_path_done(self):  # --tested
+    @pytest.mark.xfail
+    def test_create_json_file_not_done(
+        self, year, year_to, data_key, data_frame, path
+    ):  # --tested
+        """This method will test whether it create json file is sucessful"""
+        self.obj = NobelprizeLaureates(year, year_to)
+        data_frame = pd.DataFrame()  # for failed case
+        print(data_frame)
+        response = self.obj.create_json(data_key, data_frame, year, path)
+        assert response is False
+
+    def test_get_partition_path_done(self, year, partition):  # --tested
         """This method will test whether it get paartition is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        response = self.obj.get_partition(award_year)
-        assert response == partition_path
+        response = get_partition(year)
+        assert response == partition
 
-    def test_get_partition_path_done(self):  # --tested
-        """This method will test whether it get partition is sucessful"""
-        self.obj = NobelprizeLaureates(args)
-        response = self.obj.get_partition(award_year)
-        assert response == partition_path
+    # @pytest.mark.xfail
+    # def test_get_partition_path_not_done(self,year,partition):  # --tested
+    #     """This method will test whether it get partition is sucessful"""
+    #     response = get_partition(year)
+    #     assert response == partition
