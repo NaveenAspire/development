@@ -3,7 +3,7 @@ from api and upload to s3 with the year wise partition as single file"""
 
 import ast
 import os
-from datetime import date
+from datetime import date, datetime
 import configparser
 import argparse
 import logging
@@ -111,6 +111,13 @@ def get_partition(award_year):
         logging.error("Json file not created for the year %s", award_year)
     return partition_path
 
+def validate_year(input_year):
+    """This method """
+    try:
+        return datetime.strptime(input_year, "%Y").date().year
+    except ValueError:
+        msg = f"not a valid year: {input_year!r}"
+        raise argparse.ArgumentTypeError(msg)
 
 def main():
     """This the main method for the module fetch_nobelpriz_and_laureates"""
@@ -119,13 +126,11 @@ def main():
     parser = argparse.ArgumentParser(description="Argparser for get input from user")
     parser.add_argument(
         "--nobel_prize_year",
-        type=int,
-        help="Enter year for fetch data",
-        default=today_date.year
-        if today_date.month >= 12 and today_date.day > 10
-        else today_date.year - 1,
+        type=validate_year,
+        help="Enter year for fetch data in the format 'YYYY'",
+        default=today_date.year - 1,
     )
-    parser.add_argument("--year_to", type=int, help="Enter year_to for fetch data")
+    parser.add_argument("--year_to", type=validate_year, help="Enter year_to for fetch data in the format 'YYYY'")
     parser.add_argument(
         "endpoint",
         choices=["prize", "laureates"],
