@@ -10,43 +10,30 @@ from nobel_prizes_laureates.fetch_nobelprize_and_laureates import get_partition
 from sftp_connection import SftpCon
 from S3.s3 import S3Service
 from zipfile import ZipFile
+from logging_and_download_path import LoggingDownloadpath,parent_dir
 
-parent_dir = os.path.dirname(os.getcwd())
 config = configparser.ConfigParser()
 config.read(os.path.join(parent_dir,'develop.ini'))
-
-log_dir =  os.path.join(parent_dir, config["local"]["local_log"], "load_host_files")
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, "load_host_files.log")
-
-logging.basicConfig(
-    filename=log_file,
-    datefmt="%d-%b-%y %H:%M:%S",
-    format="%(asctime)s - %(levelname)s - %(filename)s - %(lineno)d - %(message)s",
-    level=logging.INFO,
-)
-logger = logging.getLogger()
 
 class LoadHostFilesSftpToS3:
     """This the class which contains methods 
     for the load the sftp files into s3"""
     
     def __init__(self) -> None:
-        """This is the init method for the class LoadHostFilesSftpToS3"""
-        self.zip_download_path = os.path.join(
-            parent_dir, config["local"]["local_file_path"], "host_aspire_zip_files"
-        )
-        self.txt_download_path = os.path.join(
-            parent_dir, config["local"]["local_file_path"], "host_aspire_txt_files"
-        )
+        """This is the init method for the class LoadHostFilesSftpToS3""" 
+        logger_dwonload = LoggingDownloadpath(config)
+        self.logger = logger_dwonload.set_logger(__name__)
+        self.zip_download_path = logger_dwonload.set_downloadpath("host_aspire_zip_files")
+        self.zip_download_path = logger_dwonload.set_downloadpath("host_aspire_txt_files")
         os.makedirs(self.download_path, exist_ok=True)
-        self.sftp_obj = SftpCon(config,logger)
-        self.s3_obj = S3Service(logger)
+        self.sftp_obj = SftpCon(config,self.logger)
+        self.s3_obj = S3Service(self.logger)
     
     def download_host_files(self,):
         """This method will download all the host aspire zipfiles from sftp """
         try :
-            response = self.sftp_obj.get_all_files(self.zip_download_path)
+            s3_files = self.s3_obj.get_file_list('source/')
+            self.sftp_obj.get_new_file_only(self.zip_download_path,s3_files)
             for file in os.listdir(self.zip_download_path):
                 with ZipFile(os.path.join(self.zip_download_path,file), 'r') as zip:
                     zip.extractall(self.txt_download_path)

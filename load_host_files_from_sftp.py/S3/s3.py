@@ -39,3 +39,17 @@ class S3Service:
             print(error)
             key = None
         return key
+    
+    def get_file_list(self, prefix):
+        """This method used to get the list of files from s3 bucket"""
+        file_list = []
+        prefix = self.bucket_path+prefix
+        try :
+            paginator = self.s3_obj.get_paginator('list_objects_v2')
+            for my_bucket in paginator.paginate(Bucket = self.bucket_name, Prefix = prefix):
+                if my_bucket.get('Contents'):
+                    for file_obj in my_bucket.get('Contents'):
+                        file_list.append(file_obj['Key'].split('/'[-1]))
+        except ClientError as err:
+            print(err)
+        return file_list
