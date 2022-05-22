@@ -2,6 +2,7 @@
 import sys
 from datetime import date
 import requests
+import pandas as pd
 
 
 class NobelPrizeApi:
@@ -39,3 +40,27 @@ class NobelPrizeApi:
             print(err)
             self.logging.error(f"nobel prize response is not fetch for year {year} due to {err}")
         return nobel_response
+
+    def fetch_all_response(self, endpoint,name):
+        """This method will fetch all response for the endpoint as in data_frame"""
+        try :
+            response = requests.get(endpoint)  
+            json_response = response.json()          
+            dfs = []
+            if response.status_code == 200 and json_response.get(name): 
+                while True:
+                    data_frame = pd.DataFrame.from_records(json_response.get(name))
+                    dfs.append(data_frame)
+                    next = json_response.get('links').get('next')
+                    if not next:
+                        print("breaked")
+                        break
+                    json_response = requests.get(next).json()
+                data_frame = pd.concat(dfs)
+            else:
+                print(f"Yours response code is {response.status_code}")
+                raise Exception
+        except Exception as err:
+            print(f'Error occured : {err}')
+            data_frame = pd.DataFrame()
+        return data_frame

@@ -34,24 +34,16 @@ class NobelprizeLaureates:
         print(self.download_path)
         self.dummy_s3 = DummyS3(config,logging)
 
-    def fetch_endpoint_response(self, endpoint, path, data_key):
-        """This method will fetch the data depends on the endpoint
-        method passed in parameters as dataframe and call the create json method"""
-        if self.year_to:
-            for spec_year in range(self.year, self.year_to):
-                data_frame = self.get_dataframe_response(endpoint, spec_year, path, data_key)
-        else:
-            data_frame = self.get_dataframe_response(endpoint, self.year, path, data_key)
-        # return data_frame if "data_frame" in locals() else False # for testing
-        return data_frame if "data_frame" in locals() else sys.exit("You were given wrong range")
-
-    def get_dataframe_response(self, endpoint, year, path, data_key):
+    def get_dataframe_response(self, endpoint, path, data_key):
         """This method will use to get the data as data frame"""
         try:
-            response = self.nobelprize_api.fetch_prize_or_laureaes_response(endpoint, year)
-            data_frame = pd.DataFrame.from_records(response.get(data_key))
+            if self.year and self.year_to:
+                endpoint = f'{endpoint}?nobelPrizeYear={self.year}&yearTo={self.year_to}'
+                year_range = f'{self.year}_to_{self.year_to}'
+            data_frame = self.nobelprize_api.fetch_all_response(endpoint,data_key)
             if not data_frame.empty:
-                self.create_json(data_key, data_frame, year, path)
+                name = data_key+year_range if 'year_range' in locals() else data_key
+                self.create_json(name, data_frame, path)
                 logging.info("%s data fetched for the year %s...", data_key, self.year)
         except Exception as err:
             print(err)
@@ -62,12 +54,10 @@ class NobelprizeLaureates:
         self,
         name,
         data_frame,
-        award_year,
-        path,
     ):
         """This method will create the json file from the given dataframe"""
         try:
-            file_name = f"{name}_{award_year}.json"
+            file_name = f"{name}.json"
             print(file_name)
             # if data_frame.empty : # for testing
             #     return False
@@ -77,26 +67,12 @@ class NobelprizeLaureates:
                 lines=True,
             )
             # self.upload_to_s3(self.path + "/" + file_name, key)
-            logging.info("Json file Sucessfully created for the year %s", award_year)
-            self.dummy_s3.upload_dummy_local_s3(
-                os.path.join(self.download_path, file_name),
-                path + get_partition(award_year),
-            )
+            logging.info("Json file Sucessfully created...")
+            
         except Exception as err:
             print(err)
-            logging.error("Json file not created for the year %s", award_year)
+            logging.error("Json file not created...")
         return not "err" in locals()
-
-
-def get_partition(award_year):
-    """This method will create the partition based on the award year"""
-    try:
-        partition_path = f"pt_year={award_year}"
-    except Exception as err:
-        print(err)
-        partition_path = None
-        logging.error("Json file not created for the year %s", award_year)
-    return partition_path
 
 def validate_year(input_year):
     """This method """
@@ -132,7 +108,7 @@ def main():
         else config["nobel_api"]["lauretes_arguments"]
     )
     kwargs = ast.literal_eval(kwargs)
-    nobel.fetch_endpoint_response(**kwargs)
+    nobel.get_dataframe_response(**kwargs)
 
 
 if __name__ == "__main__":
