@@ -36,3 +36,4 @@ class LoggingDownloadpath:
         path =  os.path.join(parent_dir, self.config["local"]["local_file_path"], folder_name)
         os.makedirs(path, exist_ok=True)
         return path
+        

@@ -14,18 +14,6 @@ class SftpCon:
         )
         self.r_path = config_obj["SFTP"]["remote_path"],
         self.logging = logger_obj
-
-    # def get_all_files(self,lpath):
-    #     """This method that retrieve the all files in server only"""
-    #     try :
-    #         self.conn.get_d(self.r_path,lpath)
-    #         self.conn.close()
-    #         response = True
-    #     except Exception as err :
-    #         print(err)
-    #         self.logging.error("While call get_d in sftp error occured as %s",err)
-    #         response = False
-    #     return response
     
     def list_files(self):
         """This method that returns the list of files names for the given path"""
