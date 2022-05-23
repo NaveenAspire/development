@@ -2,13 +2,14 @@
 from datetime import timedelta
 import sys
 import configparser
-from sqlalchemy.engine import URL,create_engine
+from sqlalchemy.engine import URL, create_engine
 import pandas as pd
 import os
 
 parent_dir = os.path.dirname(os.getcwd())
 config = configparser.ConfigParser()
 config.read(parent_dir + "/develop.ini")
+
 
 class SqlConnection:
     """This is the class which contains methods for connecting SQL with python"""
@@ -20,11 +21,13 @@ class SqlConnection:
         self.conn = self.connect(connection_string)
         self.logger.info("Object Sucessfully created for class SqlConnection..")
 
-    def connect(self,connection_string):
+    def connect(self, connection_string):
         """This is method will make the sql connection with
         and return the connection object"""
         try:
-            connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
+            connection_url = URL.create(
+                "mssql+pyodbc", query={"odbc_connect": connection_string}
+            )
             conn = create_engine(connection_url)
             self.logger.info("Connection is established sucessfully..")
         except Exception as err:
@@ -37,8 +40,8 @@ class SqlConnection:
         """This is method will make the sql connection with
         and return the connection object"""
         try:
-            df_list =[]
-            for chunk in pd.read_sql(query,self.conn,chunksize=1000):
+            df_list = []
+            for chunk in pd.read_sql(query, self.conn, chunksize=1000):
                 df_list.append(chunk)
             data_frame = pd.concat(df_list)
             self.logger.info("Query read sucessfully..")
@@ -47,25 +50,27 @@ class SqlConnection:
             print(err)
             data_frame = None
         return data_frame
-    
-    def where_query(self,table,column,start,end=None,con_param='=',exclude=False):
+
+    def where_query(self, table, column, start, end=None, con_param="=", exclude=False):
         """This method will retrieve the data based on the where query conditions"""
-        try :
+        try:
             con_param = con_param.upper()
-            if not end and con_param in ['=','<','>','<=','>='] :
-                query = f"SELECT * FROM {table}  WHERE {column} {con_param}"\
-                    f"'{start}'"
-            elif end and con_param == 'BETWEEN' :
+            if not end and con_param in ["=", "<", ">", "<=", ">="]:
+                query = (
+                    f"SELECT * FROM {table}  WHERE {column} {con_param}" f"'{start}'"
+                )
+            elif end and con_param == "BETWEEN":
                 end = end - timedelta(1) if exclude else end
                 print(type(exclude))
-                query = f"SELECT * FROM {table}  WHERE {column} "\
+                query = (
+                    f"SELECT * FROM {table}  WHERE {column} "
                     f"{con_param}'{start}' AND '{end}'"
-            else :
+                )
+            else:
                 data_frame = None
                 # sys.exit("You were given wrong operator for given date")
             data_frame = self.read_query(query)
-        except Exception as err :
+        except Exception as err:
             print(err)
             data_frame = None
         return data_frame
-        

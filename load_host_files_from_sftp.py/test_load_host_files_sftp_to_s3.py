@@ -1,41 +1,38 @@
 """This is the test module for test  the load the host aspire files from sftp.
 And upload the information as json file with partition based on date in filename"""
 import configparser
-from datetime import date
+from datetime import datetime
 import os
 import pytest
-import pandas as pd
-from load_host_files_sftp_to_s3 import LoadHostFilesSftpToS3
+from sftp_connection import SftpCon
+from load_host_files_sftp_to_s3 import LoadHostFilesSftpToS3, get_partition
 from S3.s3 import S3Service
 from logging_and_download_path import (
     LoggingDownloadpath,
     parent_dir,
 )
-from move_sftp_to_s3.sftp_connection import SftpCon
-from nobel_prizes_laureates.fetch_nobelprize_and_laureates import get_partition
+
 config = configparser.ConfigParser()
 config.read(parent_dir + "/develop.ini")
 logger_donload = LoggingDownloadpath(config)
-logger = logger_donload.set_logger('nobel_prizes_laureates')
+logger = logger_donload.set_logger("nobel_prizes_laureates")
+
 
 @pytest.fixture
 def lpath():
     file_path = os.path.join(
         parent_dir,
         config["local"]["local_file_path"],
-        "host_aspire_zip_files",)
+        "host_aspire_zip_files",
+    )
     return file_path
+
 
 @pytest.fixture
 def file_exist_list():
     s3_obj = S3Service(logger)
-    file_list = s3_obj.get_file_list('source/')
+    file_list = s3_obj.get_file_list("source/")
     return file_list
-
-@pytest.fixture
-def partition(year):
-    partition_path = f"pt_year={year}"
-    return partition_path
 
 
 @pytest.fixture
@@ -45,8 +42,18 @@ def file_name():
 
 
 @pytest.fixture
-def file(file_name):
-    file_name = os.path.join(file_name,file)
+def partition(file_name):
+    date = datetime.strptime(file_name.split(".")[0], "ASP_%Y%m%d").date()
+    partition_path = datetime.strftime(date, "pt_year=%Y/pt_month=%m/pt_day=%d/")
+    return partition_path
+
+
+@pytest.fixture
+def file(file_name, lpath):
+    file_name = os.path.join(
+        lpath,
+        file_name,
+    )
     return file_name
 
 
@@ -89,18 +96,18 @@ class Test_SftpConnection:
         result = sftp_obj.list_files()
         assert result == None
 
-    def test_download_new_file(self,lpath):
+    def test_download_new_file(self, lpath):
         """This method will test the when the file downloaded or not"""
         self.sftp_obj = SftpCon()
-        result = self.sftp_obj.download_file(lpath,file_exist_list)
-        assert os.path.exists(result) == True
+        result = self.sftp_obj.download_file(lpath, file_exist_list)
+        assert os.path.exists(result) is True
 
     @pytest.mark.xfail
-    def test_download_new_file_is_failed(self,lpath):
+    def test_download_new_file_is_failed(self, lpath):
         """This method will test the when the file downloaded or not"""
         self.sftp_obj = SftpCon()
-        result = self.sftp_obj.download_file(lpath,file_exist_list)
-        assert os.path.exists(result) == False
+        result = self.sftp_obj.download_file(lpath, file_exist_list)
+        assert os.path.exists(result) is False
 
 
 class Test_s3:
@@ -137,7 +144,7 @@ class Test_LoadHostAspireFiles:
     """This class will test all success and failure cases for
     fetch_nobel_prizes_laureates module"""
 
-    def test_nobel_prizes_laureates_object(self, year, year_to):
+    def test_nobel_prizes_laureates_object(self):
         """This method test the instance belong to the class of NobelprizeLaureates"""
         self.obj = LoadHostFilesSftpToS3()
         assert isinstance(self.obj, LoadHostFilesSftpToS3)
@@ -155,20 +162,21 @@ class Test_LoadHostAspireFiles:
         response = self.obj.download_host_files()
         assert response is False
 
-    def test_upload_host_files_to_s3_done(self,lpath,bucket_path):
+    def test_upload_host_files_to_s3_done(self, lpath, bucket_path):
         """This method will test whether response get successfully for given endpoint"""
         self.obj = LoadHostFilesSftpToS3()
-        response = self.obj.upload_host_files_to_s3(lpath,bucket_path)
+        response = self.obj.upload_host_files_to_s3(lpath, bucket_path)
         assert isinstance(response, str)
 
     @pytest.mark.xfail
-    def test_upload_host_files_to_s3_not_done(self,):
+    def test_upload_host_files_to_s3_not_done(
+        self,
+    ):
         """This method will test whether response get successfully for given endpoint"""
         self.obj = LoadHostFilesSftpToS3()
         lapth = "unavilable_pah"
-        response = self.obj.upload_host_files_to_s3(lapth,bucket_path)
+        response = self.obj.upload_host_files_to_s3(lapth, bucket_path)
         assert isinstance(response, str)
-
 
     def test_get_partition_done(self, name, partition):
         """This method will test whether it get paartition is sucessful"""
@@ -176,8 +184,7 @@ class Test_LoadHostAspireFiles:
         assert response == partition
 
     @pytest.mark.xfail
-    def test_get_partition_path_not_done(self,name,partition):
+    def test_get_partition_path_not_done(self, name, partition):
         """This method will test whether it get partition is sucessful"""
         response = get_partition(name)
         assert response == partition
-    

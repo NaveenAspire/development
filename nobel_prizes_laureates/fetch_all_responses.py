@@ -11,12 +11,12 @@ import pandas as pd
 from nobelprize_api import NobelPrizeApi
 from dummy_S3.dummy_s3 import DummyS3
 from S3.s3 import S3Service
-from logging_and_download_path import LoggingDownloadpath,parent_dir
+from logging_and_download_path import LoggingDownloadpath, parent_dir
 
 config = configparser.ConfigParser()
 config.read(parent_dir + "/develop.ini")
 logger_donload = LoggingDownloadpath(config)
-logging = logger_donload.set_logger('nobel_prizes_laureates')
+logging = logger_donload.set_logger("nobel_prizes_laureates")
 
 
 class NobelprizeLaureates:
@@ -26,23 +26,25 @@ class NobelprizeLaureates:
 
     def __init__(self, nobel_prize_year, year_to) -> None:
         """This is the init method for the class NobelprizeLaureates"""
-        
+
         self.year = nobel_prize_year
         self.year_to = year_to + 1 if year_to else None
-        self.nobelprize_api = NobelPrizeApi(config,logging)
+        self.nobelprize_api = NobelPrizeApi(config, logging)
         self.download_path = logger_donload.set_downloadpath("nobelPrize_laureates")
         print(self.download_path)
-        self.dummy_s3 = DummyS3(config,logging)
+        self.dummy_s3 = DummyS3(config, logging)
 
     def get_dataframe_response(self, endpoint, path, data_key):
         """This method will use to get the data as data frame"""
         try:
             if self.year and self.year_to:
-                endpoint = f'{endpoint}?nobelPrizeYear={self.year}&yearTo={self.year_to}'
-                year_range = f'{self.year}_to_{self.year_to}'
-            data_frame = self.nobelprize_api.fetch_all_response(endpoint,data_key)
+                endpoint = (
+                    f"{endpoint}?nobelPrizeYear={self.year}&yearTo={self.year_to}"
+                )
+                year_range = f"{self.year}_to_{self.year_to}"
+            data_frame = self.nobelprize_api.fetch_all_response(endpoint, data_key)
             if not data_frame.empty:
-                name = data_key+year_range if 'year_range' in locals() else data_key
+                name = data_key + year_range if "year_range" in locals() else data_key
                 self.create_json(name, data_frame, path)
                 logging.info("%s data fetched for the year %s...", data_key, self.year)
         except Exception as err:
@@ -68,19 +70,21 @@ class NobelprizeLaureates:
             )
             # self.upload_to_s3(self.path + "/" + file_name, key)
             logging.info("Json file Sucessfully created...")
-            
+
         except Exception as err:
             print(err)
             logging.error("Json file not created...")
         return not "err" in locals()
 
+
 def validate_year(input_year):
-    """This method """
+    """This method"""
     try:
         return datetime.strptime(input_year, "%Y").date().year
     except ValueError:
         msg = f"not a valid year: {input_year!r}"
         raise argparse.ArgumentTypeError(msg)
+
 
 def main():
     """This the main method for the module fetch_nobelpriz_and_laureates"""
@@ -93,14 +97,18 @@ def main():
         help="Enter year for fetch data in the format 'YYYY'",
         default=today_date.year - 1,
     )
-    parser.add_argument("--year_to", type=validate_year, help="Enter year_to for fetch data in the format 'YYYY'")
+    parser.add_argument(
+        "--year_to",
+        type=validate_year,
+        help="Enter year_to for fetch data in the format 'YYYY'",
+    )
     parser.add_argument(
         "endpoint",
         choices=["prize", "laureates"],
         help="Choose from choices for get single endpoint response either prize or laureates",
     )
     args = parser.parse_args()
-    nobel = NobelprizeLaureates(args.nobel_prize_year,args.year_to)
+    nobel = NobelprizeLaureates(args.nobel_prize_year, args.year_to)
     logging.info("Script started to fetch data for the endpoint %s....", args.endpoint)
     kwargs = (
         config["nobel_api"]["prize_arguments"]

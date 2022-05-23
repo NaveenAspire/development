@@ -19,7 +19,9 @@ class BackupCrawlerDefinition:
         for crawler in response["Crawlers"]:
             key = "glue/crawler/" + crawler["Name"] + ".json"
             data_object = bytes(json.dumps(crawler))
-            self.s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=data_object)
+            self.s3_client.put_object(
+                Bucket=self.bucket_name, Key=key, Body=data_object
+            )
 
 
 def main():

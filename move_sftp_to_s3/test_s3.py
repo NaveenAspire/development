@@ -15,7 +15,7 @@ class Test_s3:
 
     @pytest.fixture
     def s3_test(self, s3_client, bucket_name):
-        """This is the fixture for creating s3 bucket """
+        """This is the fixture for creating s3 bucket"""
         print(s3_client)
         self.res = s3_client.create_bucket(Bucket=bucket_name)
         yield
@@ -31,11 +31,13 @@ class Test_s3:
             self.my_client = S3Service()
             print(s3_client)
             key = self.my_client.upload_file("sample.csv", "sample.csv")
-            response = self.my_client.s3_obj.get_object(Bucket="my-test-bucket", Key=key)
+            response = self.my_client.s3_obj.get_object(
+                Bucket="my-test-bucket", Key=key
+            )
         except ClientError as err:
             print(err)
             response = None
-        assert isinstance(response,dict)
+        assert isinstance(response, dict)
 
     @pytest.mark.xfail
     def test_upload_file_failed(self, s3_client, s3_test):
@@ -44,7 +46,9 @@ class Test_s3:
             self.my_client = S3Service()
             key = self.my_client.upload_file("<unavailble file name>", "sample.csv")
             print(key)
-            response = self.my_client.s3_obj.get_object(Bucket="my-test-bucket", Key=key)
+            response = self.my_client.s3_obj.get_object(
+                Bucket="my-test-bucket", Key=key
+            )
         except (ClientError, ParamValidationError) as err:
             print(err)
             response = None
@@ -55,11 +59,13 @@ class Test_s3:
         try:
             self.my_client = S3Service()
             key = self.my_client.put_object(b"hai hello", "hello.txt")
-            response = self.my_client.s3_obj.get_object(Bucket="my-test-bucket", Key=key)
+            response = self.my_client.s3_obj.get_object(
+                Bucket="my-test-bucket", Key=key
+            )
         except ClientError as err:
             print(err)
             response = None
-        assert isinstance(response,dict)
+        assert isinstance(response, dict)
 
     @pytest.mark.xfail
     def test_put_object_failed(self, s3_client, s3_test):
@@ -70,7 +76,7 @@ class Test_s3:
             response = self.my_client.s3_obj.get_object(
                 Bucket="my-test-bucket", Key=None
             )
-        except (ClientError,ParamValidationError) as err:
+        except (ClientError, ParamValidationError) as err:
             print(err)
             response = None
         assert response is None

@@ -10,16 +10,16 @@ parent_dir = os.path.dirname(os.getcwd())
 
 class LoggingDownloadpath:
     """This class will contain the methods for create logger and set dwonload path"""
-    
-    def __init__(self,config_obj) -> None:
+
+    def __init__(self, config_obj) -> None:
         """This is the init method for the class LoggingDownloadpath"""
-        self.config = config_obj       
-        
-    def set_logger(self,name):
+        self.config = config_obj
+
+    def set_logger(self, name):
         """This method will create the logger in the name which you passed in params"""
-        log_dir =  os.path.join(parent_dir, self.config["local"]["local_log"],name)
+        log_dir = os.path.join(parent_dir, self.config["local"]["local_log"], name)
         os.makedirs(log_dir, exist_ok=True)
-        log_file = os.path.join(log_dir, name+".log")
+        log_file = os.path.join(log_dir, name + ".log")
         logging.basicConfig(
             filename=log_file,
             datefmt="%d-%b-%y %H:%M:%S",
@@ -27,13 +27,16 @@ class LoggingDownloadpath:
             level=logging.INFO,
         )
         logger = logging.getLogger(name)
-        handler = TimedRotatingFileHandler(log_file,when='h', interval=1, backupCount=3)
+        handler = TimedRotatingFileHandler(
+            log_file, when="h", interval=1, backupCount=3
+        )
         logger.addHandler(handler)
         return logger
-    
-    def set_downloadpath(self,folder_name):
+
+    def set_downloadpath(self, folder_name):
         """This method will used to set downloadpath for the local"""
-        path =  os.path.join(parent_dir, self.config["local"]["local_file_path"], folder_name)
+        path = os.path.join(
+            parent_dir, self.config["local"]["local_file_path"], folder_name
+        )
         os.makedirs(path, exist_ok=True)
         return path
-        

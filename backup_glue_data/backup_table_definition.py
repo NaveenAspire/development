@@ -25,13 +25,15 @@ class BackupTableDefinition:
         """This method helpls to get tables definition as json for giving databses"""
         database_list = self.get_database_list()
         for databsase in database_list:
-            tables_response_list = self.glue_client.get_tables(DatabaseName=databsase).get(
-                "TableList"
-            )
+            tables_response_list = self.glue_client.get_tables(
+                DatabaseName=databsase
+            ).get("TableList")
             for table_response in tables_response_list:
                 key = "glue/table/" + databsase + "/" + table_response["Name"] + ".json"
                 data_object = bytes(json.dumps(table_response))
-                self.s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=data_object)
+                self.s3_client.put_object(
+                    Bucket=self.bucket_name, Key=key, Body=data_object
+                )
 
 
 def main():

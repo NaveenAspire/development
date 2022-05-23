@@ -32,10 +32,10 @@ class S3Service:
             #     key
             #     # self.local_path + file, self.bucket_path + key
             # )
-            print("File Sucessfully uploaded as key :"+key)
+            print("File Sucessfully uploaded as key :" + key)
         except (Exception, ClientError) as error:
             print(error)
-            key = None              
+            key = None
         return key
 
     def put_object(self, body, key):

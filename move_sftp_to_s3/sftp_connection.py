@@ -57,10 +57,10 @@ class SftpCon:
     def rename_file(self, file):
         """This method is used for rename the sftp file or directory"""
         try:
-            new_name = os.path.join(os.getcwd(),self.local_path+"pressd."+file) 
-            old_lname = os.path.join(os.getcwd(),self.local_path+file) 
-            os.rename(old_lname,new_name)
-            print("file remamed as "+new_name)
+            new_name = os.path.join(os.getcwd(), self.local_path + "pressd." + file)
+            old_lname = os.path.join(os.getcwd(), self.local_path + file)
+            os.rename(old_lname, new_name)
+            print("file remamed as " + new_name)
             # new_name = self.sftp_path + "prcssd." + file
             # self.conn.rename(self.sftp_path + file, new_name)
         except Exception as err:

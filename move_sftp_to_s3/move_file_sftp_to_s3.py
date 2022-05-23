@@ -19,11 +19,11 @@ class MoveFileSftpToS3:
         try:
             # sftp_file_list = self.sftp_conn.list_files()
             # print("sftp files list are ready..")
-            for file_name in os.listdir('opt/data'):
-            # for file_name in sftp_file_list:
+            for file_name in os.listdir("opt/data"):
+                # for file_name in sftp_file_list:
                 # file_obj = self.sftp_conn.read_file(file_name)
                 # self.sftp_conn.download_file(file_name)
-                print(file_name+" is processing")
+                print(file_name + " is processing")
                 key = self.get_key_name(file_name)
                 if key:
                     # self.s3_client.put_object(file_obj.read(), key)
@@ -42,7 +42,7 @@ class MoveFileSftpToS3:
         try:
             d_match = re.search("([0-9]{1,2}.[0-9]{1,2}.[0-9]{2,4})", file_name).group()
             date_object = datetime.strptime(d_match, "%d.%m.%y")
-            key = date_object.strftime("pt_year=%Y/pt_month=%m/pt_day=%d/"+file_name)
+            key = date_object.strftime("pt_year=%Y/pt_month=%m/pt_day=%d/" + file_name)
         except Exception as err:
             key = False
             print("Exception occured : ")

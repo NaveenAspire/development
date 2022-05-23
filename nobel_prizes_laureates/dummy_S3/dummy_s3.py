@@ -15,14 +15,16 @@ class DummyS3:
 
     def upload_dummy_local_s3(self, source, partition_path):
         """This method will upload the file into dummy local s3 folder"""
-        try :
+        try:
             dest = os.path.join(self.dummy_s3_path, partition_path)
             os.makedirs(dest, exist_ok=True)
             shutil.copy(source, dest)
             self.logging.info("File successfully uploaded into dummy S3")
             response = True
-        except Exception as err :
+        except Exception as err:
             print(err)
-            self.logging.error(f"Error occured while copy file source to destination due to {err}")
+            self.logging.error(
+                f"Error occured while copy file source to destination due to {err}"
+            )
             response = False
         return response

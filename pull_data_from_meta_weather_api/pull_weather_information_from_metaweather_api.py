@@ -17,7 +17,9 @@ from S3.s3 import S3Service
 parent_dir = os.path.dirname(os.getcwd())
 config = configparser.ConfigParser()
 config.read(parent_dir + "/develop.ini")
-log_dir = os.path.join(parent_dir, "opt/logging/pull_weather_information_from_metaweather_api/")
+log_dir = os.path.join(
+    parent_dir, "opt/logging/pull_weather_information_from_metaweather_api/"
+)
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, "weather_information.log")
 
@@ -44,7 +46,9 @@ class PullWeatherInformationFromMetaWeatherApi:
         self.last_run = get_date(
             config["pull_weather_information_from_metaweather_api"]["last_date"]
         )
-        self.path = os.path.join(parent_dir, config["local"]["local_file_path"], "meta_weather")
+        self.path = os.path.join(
+            parent_dir, config["local"]["local_file_path"], "meta_weather"
+        )
         os.makedirs(self.path, exist_ok=True)
         self.metaweather = MetaWeatherApi(logger)
         logger.info("Object successfully created!!!")
@@ -54,21 +58,27 @@ class PullWeatherInformationFromMetaWeatherApi:
         check_date = datetime.now().date()
         if self.s_date:
             if self.s_date < check_date:
-                response = self.get_weather_information_between_two_dates(self.s_date, self.e_date)
+                response = self.get_weather_information_between_two_dates(
+                    self.s_date, self.e_date
+                )
                 logging.info("weather information took for start date to end date")
             print(
-            "Script ran for start and end date. So script was terminated without update last run.."
+                "Script ran for start and end date. So script was terminated without update last run.."
             )
             sys.exit()
         elif self.last_run and self.last_run < check_date:
             print(self.last_run)
-            response = self.get_weather_information_between_two_dates(self.last_run, check_date)
-            logging.info("weather information took for last run date to yesterday's date")
+            response = self.get_weather_information_between_two_dates(
+                self.last_run, check_date
+            )
+            logging.info(
+                "weather information took for last run date to yesterday's date"
+            )
         else:
             data_exist = "Data available upto date..."
-            self.get_weather_information(check_date - timedelta(1)) if not self.last_run else print(
-                data_exist
-            )
+            self.get_weather_information(
+                check_date - timedelta(1)
+            ) if not self.last_run else print(data_exist)
             response = None
             logging.info("weather information took for yesterday's date")
         return response
@@ -77,7 +87,7 @@ class PullWeatherInformationFromMetaWeatherApi:
         """This method will get the information between two dates of response"""
         try:
             dates = []
-            while start < end and start < datetime.now().date()-timedelta(1):
+            while start < end and start < datetime.now().date() - timedelta(1):
                 self.get_weather_information(start)
                 logging.info(f"weather information successfully took for {start}")
                 dates.append(start)
@@ -92,7 +102,9 @@ class PullWeatherInformationFromMetaWeatherApi:
         try:
             search_date = date.strftime("%Y/%m/%d")
             for key, value in self.woeid_date.items():
-                response = self.metaweather.weather_information_using_woeid_date(value, search_date)
+                response = self.metaweather.weather_information_using_woeid_date(
+                    value, search_date
+                )
                 if response is None:
                     print("Script was terminated due error in api response..")
                     sys.exit()
@@ -192,9 +204,7 @@ def main():
 
 def set_last_run():
     """This function that will set the last run of the script"""
-    config.set(
-        "pull_sql_employee_data", "script_run", str(datetime.now().date())
-    )
+    config.set("pull_sql_employee_data", "script_run", str(datetime.now().date()))
     with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
         config.write(file)
 

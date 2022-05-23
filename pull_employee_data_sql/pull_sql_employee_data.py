@@ -55,7 +55,7 @@ class PullSqlEmployeeData:
         """This method will pass the date and condition to where query
         and get employee data based on paased values"""
         try:
-            if not self.e_date and self.s_date == self.last_run-timedelta(1):
+            if not self.e_date and self.s_date == self.last_run - timedelta(1):
                 sys.exit("Data available upto date..")
             data_frame = self.sql.where_query(
                 "Employee",
@@ -69,7 +69,7 @@ class PullSqlEmployeeData:
             while start <= max(data_frame["date_of_join"]):
                 self.create_json_file(data_frame, start)
                 start = start + timedelta(1)
-        except (TypeError,ValueError):
+        except (TypeError, ValueError):
             data_frame = None
             print("Data not available for the given date..")
         return data_frame
@@ -81,7 +81,7 @@ class PullSqlEmployeeData:
             str_date = datetime.strftime(date, "%Y-%m-%d")
             new_df = data_frame[(data_frame.date_of_join == date)]
             if not new_df.empty:
-                date_columns = new_df.select_dtypes(include=['object']).columns.tolist()
+                date_columns = new_df.select_dtypes(include=["object"]).columns.tolist()
                 new_df[date_columns] = new_df[date_columns].astype(str)
                 pd.DataFrame.to_json(
                     new_df,
@@ -111,6 +111,7 @@ class PullSqlEmployeeData:
             partition_path = None
         return partition_path
 
+
 def get_date(date_str):
     """This is the function it will return the date format from string format"""
     try:
@@ -126,11 +127,12 @@ def set_last_run():
     with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
         config.write(file)
 
+
 def get_bool(bool_str):
     """This is the function it will return the bool format from string format"""
-    if bool_str not in {'False','True'}:
-        raise ValueError('Not a valid boolean string')
-    return True if bool_str=='True' else False
+    if bool_str not in {"False", "True"}:
+        raise ValueError("Not a valid boolean string")
+    return True if bool_str == "True" else False
 
 
 def main():
@@ -151,10 +153,15 @@ def main():
         "--con_param", type=str, help="Enter where condition for pull data", default="="
     )
     parser.add_argument(
-        "--exclude", type=get_bool, help="Enter bool  for between end exclude or not", default=True
+        "--exclude",
+        type=get_bool,
+        help="Enter bool  for between end exclude or not",
+        default=True,
     )
     args = parser.parse_args()
-    pull_sql_data = PullSqlEmployeeData(args.s_date, args.e_date, args.con_param, args.exclude)
+    pull_sql_data = PullSqlEmployeeData(
+        args.s_date, args.e_date, args.con_param, args.exclude
+    )
     pull_sql_data.get_employee_data_where()
 
 

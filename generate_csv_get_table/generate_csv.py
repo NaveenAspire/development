@@ -12,7 +12,7 @@ class CreateCsv:
     def __init__(self, database_name):
         """This is the init method for class of CreateCsv"""
         self.database_name = database_name
-        self.path = os.path.join(os.getcwd(),'opt/data')
+        self.path = os.path.join(os.getcwd(), "opt/data")
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
@@ -20,7 +20,7 @@ class CreateCsv:
         """This methodis used for create the csv file"""
         response = self.get_tables_response()
         rows = self.get_rows_data(response)
-        with open(self.path+"/tables_details.csv", "w", encoding="utf8") as file:
+        with open(self.path + "/tables_details.csv", "w", encoding="utf8") as file:
             csv_writer = DictWriter(file, fieldnames=rows[0].keys())
             csv_writer.writeheader()
             csv_writer.writerows(rows)
@@ -28,15 +28,15 @@ class CreateCsv:
     def get_rows_data(self, table_response):
         """This method used to get list of row for write csv file"""
         row_list = []
-        #below table_response["TableList"] is list of dictionaries,
-        #each dictionary contains one table information
-        for item in table_response["TableList"]:  #item has table details as dict
+        # below table_response["TableList"] is list of dictionaries,
+        # each dictionary contains one table information
+        for item in table_response["TableList"]:  # item has table details as dict
             if not item["StorageDescriptor"].get("Location"):
                 continue
             tmp_dict = {
                 "table_name": item["Name"],
                 "database_name": item["DatabaseName"],
-                "crawler_name": item["Parameters"].get("UPDATED_BY_CRAWLER",""),
+                "crawler_name": item["Parameters"].get("UPDATED_BY_CRAWLER", ""),
                 "s3_path": item["StorageDescriptor"]["Location"],
             }
             row_list.append(tmp_dict)
@@ -46,7 +46,7 @@ class CreateCsv:
         """This method returns the response of boto3 get_table method"""
         client = boto3.client("glue")
         tables_response = client.get_tables(DatabaseName=self.database_name)
-        #table_response as type dictionary
+        # table_response as type dictionary
         return tables_response
 
 

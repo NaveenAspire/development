@@ -305,27 +305,29 @@ class Test_fetch_nobelPrizes_laureates:
     #     """This method will test whether it get partition is sucessful"""
     #     response = get_partition(year)
     #     assert response == partition
-    
+
+
 class Test_dummy_s3:
     """This class will test the dummy_s3 module methods"""
+
     def test_dummy_s3_obj(self):
         """This method will test the instance belong to the class of NobelprizeLaureates"""
-        self.obj = DummyS3(config,logger)
+        self.obj = DummyS3(config, logger)
         assert isinstance(self.obj, DummyS3)
-        
+
     def test_upload_dummy_local_s3_done(self, path, file, partition):
         """This method will test whether the upload to dummy s3 is success"""
-        self.obj = DummyS3(config,logger)
-        dest = path+partition
-        response = self.obj.upload_dummy_local_s3(file,dest)
+        self.obj = DummyS3(config, logger)
+        dest = path + partition
+        response = self.obj.upload_dummy_local_s3(file, dest)
         assert response is True
-    
-    pytest.mark.xfail        
+
+    pytest.mark.xfail
+
     def test_upload_dummy_local_s3_not_done(self, path, partition):
         """This method will test whether the upload to dummy s3 is not success"""
-        self.obj = DummyS3(config,logger)
-        dest = path+partition
-        response = self.obj.upload_dummy_local_s3('unavilable_file',dest)
+        self.obj = DummyS3(config, logger)
+        dest = path + partition
+        response = self.obj.upload_dummy_local_s3("unavilable_file", dest)
         print(response)
         assert response is False
-        

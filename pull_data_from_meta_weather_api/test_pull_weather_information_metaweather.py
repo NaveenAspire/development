@@ -18,7 +18,9 @@ from pull_weather_information_from_metaweather_api import (
 )
 
 
-log_dir = os.path.join(parent_dir, "opt/logging/pull_weather_information_from_metaweather_api/")
+log_dir = os.path.join(
+    parent_dir, "opt/logging/pull_weather_information_from_metaweather_api/"
+)
 log_file = os.path.join(log_dir, "test_weather_information.log")
 logging.basicConfig(
     filename=log_file,
@@ -192,11 +194,15 @@ class Test_metaweather_api:
         self.obj = MetaWeatherApi(logger)
         assert isinstance(self.obj, MetaWeatherApi)
 
-    def test_weather_information_using_woeid_date_is_done(self, endpoint, woeid, api_search_date):
+    def test_weather_information_using_woeid_date_is_done(
+        self, endpoint, woeid, api_search_date
+    ):
         """This method will test weather information fetched is done from metaweather api"""
         self.obj = MetaWeatherApi(logger)
         try:
-            response = self.obj.weather_information_using_woeid_date(woeid, api_search_date)
+            response = self.obj.weather_information_using_woeid_date(
+                woeid, api_search_date
+            )
             result = requests.get(endpoint).json()
             print(result)
         except Exception as err:
@@ -210,7 +216,9 @@ class Test_metaweather_api:
     ):
         """This method will test weather information fetched is not done from metaweather api"""
         self.obj = MetaWeatherApi(logger)
-        response = self.obj.weather_information_using_woeid_date(wrong_woeid, wrong_api_search_date)
+        response = self.obj.weather_information_using_woeid_date(
+            wrong_woeid, wrong_api_search_date
+        )
         try:
             result = requests.get(endpoint).json()
         except Exception as err:
@@ -247,7 +255,9 @@ class Test_pull_weather_information_from_metaweather_api:
     """This class will test all success and failure cases for
     pull_weather_information_from_metaweather_api module"""
 
-    def test_pull_weather_information_from_metaweather_api_object(self, s_date, e_date):  # --tested
+    def test_pull_weather_information_from_metaweather_api_object(
+        self, s_date, e_date
+    ):  # --tested
         """This method test the instance belong to the class of PullWeatherInformationFromMetaWeatherApi"""
         self.obj = PullWeatherInformationFromMetaWeatherApi(s_date, e_date)
         assert isinstance(self.obj, PullWeatherInformationFromMetaWeatherApi)
@@ -331,7 +341,9 @@ class Test_pull_weather_information_from_metaweather_api:
         response = self.obj.get_weather_information_for_given_dates()
         assert type(response[0]) != dict
 
-    def test_get_weather_information_between_two_dates_done(self, s_date, e_date):  # --tested
+    def test_get_weather_information_between_two_dates_done(
+        self, s_date, e_date
+    ):  # --tested
         """This method will test whether it get information between two days is sucessful"""
         self.obj = PullWeatherInformationFromMetaWeatherApi(s_date, e_date)
         response = self.obj.get_weather_information_between_two_dates(s_date, e_date)
@@ -344,7 +356,9 @@ class Test_pull_weather_information_from_metaweather_api:
         """This method will test whether it get information between two days is not sucessful"""
         self.obj = PullWeatherInformationFromMetaWeatherApi(s_date_none, e_date_none)
         self.obj.last_run = last_run_none
-        response = self.obj.get_weather_information_between_two_dates(s_date_none, e_date_none)
+        response = self.obj.get_weather_information_between_two_dates(
+            s_date_none, e_date_none
+        )
         assert not isinstance(response, list)
 
     def test_get_weather_information_done(self, s_date, e_date):  # --tested
@@ -361,14 +375,18 @@ class Test_pull_weather_information_from_metaweather_api:
         print(response)
         assert response is None
 
-    def test_get_given_date_response_done(self, s_date, e_date, api_res, city):  # --tested
+    def test_get_given_date_response_done(
+        self, s_date, e_date, api_res, city
+    ):  # --tested
         """This method will test whether it get_given_date_response is sucessful"""
         self.obj = PullWeatherInformationFromMetaWeatherApi(s_date, e_date)
         response = self.obj.get_given_date_response(api_res, city, s_date)
         assert response is True
 
     @pytest.mark.xfail
-    def test_get_given_date_response_not_done(self, s_date_none, e_date, api_res, city):  # --tested
+    def test_get_given_date_response_not_done(
+        self, s_date_none, e_date, api_res, city
+    ):  # --tested
         """This method will test whether it get_given_date_response is not sucessful"""
         self.obj = PullWeatherInformationFromMetaWeatherApi(s_date_none, e_date)
         response = self.obj.get_given_date_response(api_res, city, s_date_none)
@@ -450,7 +468,9 @@ class Test_pull_weather_information_from_metaweather_api:
         set_last_run()
         config = configparser.ConfigParser()
         config.read(parent_dir + "/develop.ini")
-        last_run_date = config.get("pull_weather_information_from_metaweather_api", "last_date")
+        last_run_date = config.get(
+            "pull_weather_information_from_metaweather_api", "last_date"
+        )
         assert last_run_date == str(datetime.now().date())
 
     @pytest.mark.xfail  # tested
@@ -459,5 +479,7 @@ class Test_pull_weather_information_from_metaweather_api:
         set_last_run()
         config = configparser.ConfigParser()
         config.read(parent_dir + "/develop.ini")
-        last_run_date = config.get("pull_weather_information_from_metaweather_api", "last_date")
+        last_run_date = config.get(
+            "pull_weather_information_from_metaweather_api", "last_date"
+        )
         assert last_run_date != str(datetime.now().date())
