@@ -19,8 +19,10 @@ class SftpCon:
         """This method that returns the list of files names for the given path"""
         try:
             sftp_file_list = self.conn.listdir(self.r_path)
+            self.logging.info("Successfully get the sftp file list...")
         except Exception as err:
             print(err)
+            self.logging.error("Error occured while getting sftp file list as %s",err)
             sftp_file_list = None
         return sftp_file_list
 
@@ -32,8 +34,9 @@ class SftpCon:
             for file in files:
                 self.conn.get(self.r_path + "/" + file, lpath + "/" + file)
             self.conn.close()
+            self.logging.info("Successfully get new file list...")
         except Exception as err:
-            self.logging.error("Error occured : %s", err)
+            self.logging.error("Error occured while getting new files : %s", err)
             print(err)
             lpath = None
         return lpath

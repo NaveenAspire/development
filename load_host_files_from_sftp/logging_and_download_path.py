@@ -1,6 +1,5 @@
-""""This module will used to create a logging configuration 
+""""This module will used to create a logging configuration
 and make a download path for download the files in local"""
-
 import logging
 import os
 from logging.handlers import TimedRotatingFileHandler

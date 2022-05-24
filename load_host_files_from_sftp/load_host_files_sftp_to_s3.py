@@ -34,8 +34,8 @@ class LoadHostFilesSftpToS3:
         )
         # self.sftp_obj = SftpCon(config, logger)
         # self.s3_obj = S3Service(logger)
-        self.dummy_s3 = DummyS3(config,logger)
-        self.dummy_sftp = DummySftp(config,logger)
+        self.dummy_s3 = DummyS3(config, logger)
+        self.dummy_sftp = DummySftp(config, logger)
 
     def download_host_files(
         self,
@@ -43,12 +43,13 @@ class LoadHostFilesSftpToS3:
         """This method will download all the host aspire zipfiles from sftp"""
         try:
             # s3_files = self.s3_obj.get_file_list("source/")
-            s3_files = self.dummy_s3.get_file_list("host-aspire/source/")
-            s3_files = [file.split('/')[-1] for file in s3_files]
+            s3_files = self.dummy_s3.get_file_list("host-aspire/source/")  # local
+            s3_files = [file.split("/")[-1] for file in s3_files]
             # response = self.sftp_obj.get_new_file_only(self.zip_download_path, s3_files)
-            response = self.dummy_sftp.get_new_file_only(self.zip_download_path,s3_files)
-            # response = self.dummy_sftp.get_new_file_only(self.zip_download_path,s3_files)
-            if response is None :
+            response = self.dummy_sftp.get_new_file_only(
+                self.zip_download_path, s3_files
+            )  # local
+            if response is None:
                 sys.exit("Files are uploaded upto date...")
             for file in os.listdir(self.zip_download_path):
                 with ZipFile(
@@ -74,8 +75,9 @@ class LoadHostFilesSftpToS3:
             for file in os.listdir(file_path):
                 partition = get_partition(file.split(".")[0])
                 key = os.path.join(bucket_path, partition)
-                response = self.dummy_s3.upload_dummy_local_s3(os.path.join(file_path,file),key)
-                raise Exception
+                response = self.dummy_s3.upload_dummy_local_s3(
+                    os.path.join(file_path, file), key
+                )  # local
                 # response = self.s3_obj.upload_file(os.path.join(file_path, file), key)
             response = True
         except Exception as err:

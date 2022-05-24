@@ -144,7 +144,7 @@ class Test_LoadHostAspireFiles:
     """This class will test all success and failure cases for
     fetch_nobel_prizes_laureates module"""
 
-    def test_nobel_prizes_laureates_object(self):
+    def test_load_host_aspire_files_object(self):
         """This method test the instance belong to the class of NobelprizeLaureates"""
         self.obj = LoadHostFilesSftpToS3()
         assert isinstance(self.obj, LoadHostFilesSftpToS3)
