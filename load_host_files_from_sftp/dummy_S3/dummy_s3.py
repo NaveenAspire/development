@@ -12,7 +12,6 @@ class DummyS3:
         self.logging = logger_obj
         local_s3_path = self.config["local"]["local_s3_path"]
         self.dummy_s3_path = os.path.join(os.path.dirname(os.getcwd()), local_s3_path)
-        self.bucket_path = config_obj["s3"]["bucket_path"]
 
     def get_file_list(self, prefix):
         """This method used to get the list of files from s3 bucket"""
@@ -25,13 +24,13 @@ class DummyS3:
         except Exception as err:
             print(err)
             self.logging.error("Error occured while getting s3 file list %s",err)
-            file_list = []
+            file_list = None
         return file_list
 
-    def upload_dummy_local_s3(self, source, partition_path):
+    def upload_dummy_local_s3(self, source, bucket_path):
         """This method will upload the file into dummy local s3 folder"""
         try:
-            dest = os.path.join(self.dummy_s3_path, self.bucket_path, partition_path)
+            dest = os.path.join(self.dummy_s3_path, bucket_path)
             os.makedirs(dest, exist_ok=True)
             shutil.copy(source, dest)
             self.logging.info("File successfully uploaded into dummy S3")

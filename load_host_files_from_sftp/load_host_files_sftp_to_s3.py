@@ -23,7 +23,7 @@ class LoadHostFilesSftpToS3:
     """This the class which contains methods
     for the load the sftp files into s3"""
 
-    def __init__(self) -> None:
+    def __init__(self):
         """This is the init method for the class LoadHostFilesSftpToS3"""
 
         self.zip_download_path = logger_download.set_downloadpath(
@@ -32,6 +32,8 @@ class LoadHostFilesSftpToS3:
         self.txt_download_path = logger_download.set_downloadpath(
             "host_aspire_txt_files"
         )
+        self.bucket_source_path = config["load_host_files"]["bucket_source_path"]
+        self.bucket_stage_path = config["load_host_files"]["bucket_stage_path"]
         # self.sftp_obj = SftpCon(config, logger)
         # self.s3_obj = S3Service(logger)
         self.dummy_s3 = DummyS3(config, logger)
@@ -49,7 +51,7 @@ class LoadHostFilesSftpToS3:
             response = self.dummy_sftp.get_new_file_only(
                 self.zip_download_path, s3_files
             )  # local
-            if response is None:
+            if not response :
                 sys.exit("Files are uploaded upto date...")
             for file in os.listdir(self.zip_download_path):
                 with ZipFile(
@@ -57,9 +59,9 @@ class LoadHostFilesSftpToS3:
                 ) as zip_file:
                     zip_file.extractall(self.txt_download_path)
             logger.info("zip files Sucessfully downloaded to local")
-            self.upload_host_files_to_s3(self.zip_download_path, "source")
+            self.upload_host_files_to_s3(self.zip_download_path, self.bucket_source_path)
             logger.info("zip files Sucessfully uploaded to s3")
-            self.upload_host_files_to_s3(self.txt_download_path, "stage")
+            self.upload_host_files_to_s3(self.txt_download_path, self.bucket_stage_path)
             logger.info("txt files Sucessfully uploaded to s3")
             shutil.rmtree(self.zip_download_path)
             shutil.rmtree(self.txt_download_path)
