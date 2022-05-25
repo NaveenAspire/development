@@ -1,5 +1,6 @@
 """This module that is used for connect the sftp"""
 import pysftp
+import numpy as np
 
 
 class SftpCon:
@@ -12,7 +13,7 @@ class SftpCon:
             username=config_obj["SFTP"]["username"],
             password=config_obj["SFTP"]["password"],
         )
-        self.r_path = (config_obj["SFTP"]["remote_path"],)
+        self.r_path = (config_obj["load_host_files"]["sftp_rpath"],)
         self.logging = logger_obj
 
     def list_files(self):
@@ -30,7 +31,8 @@ class SftpCon:
         """This method that retrieve the new files created in server only"""
         try:
             sftp_files = self.list_files()
-            files = [file for file in sftp_files if file not in file_exist_list]
+            files = np.setdiff1d(sftp_files,file_exist_list)
+            print(files)
             for file in files:
                 self.conn.get(self.r_path + "/" + file, lpath + "/" + file)
             self.conn.close()
