@@ -1,6 +1,7 @@
 """This module will create the dummy sftp path and methods to retrieve the files"""
 import os
 import shutil
+import numpy as np
 
 
 class DummySftp:
@@ -30,7 +31,7 @@ class DummySftp:
         """This method that retrieve the new files created in server only"""
         try:
             sftp_files = self.list_files()
-            files = [file for file in sftp_files if file not in file_exist_list]
+            files = list(np.setdiff1d(sftp_files,file_exist_list))
             if not files:
                 print("There are no new files...")
                 raise ValueError

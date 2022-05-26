@@ -19,17 +19,16 @@ class LoggingDownloadpath:
         log_dir = os.path.join(parent_dir, self.config["local"]["local_log"], name)
         os.makedirs(log_dir, exist_ok=True)
         log_file = os.path.join(log_dir, name + ".log")
-        logging.basicConfig(
-            filename=log_file,
-            datefmt="%d-%b-%y %H:%M:%S",
-            format="%(asctime)s - %(levelname)s - %(filename)s - %(lineno)d - %(message)s",
-            level=logging.INFO,
-        )
-        logger = logging.getLogger(name)
         handler = TimedRotatingFileHandler(
             log_file, when="h", interval=1, backupCount=3
         )
-        logger.addHandler(handler)
+        logging.basicConfig(
+            datefmt="%d-%b-%y %H:%M:%S",
+            format="%(asctime)s - %(levelname)s - %(filename)s - %(lineno)d - %(message)s",
+            level=logging.INFO,handlers=[handler]
+        )
+        logger = logging.getLogger(name)
+        # logger.addHandler(handler)
         return logger
 
     def set_downloadpath(self, folder_name):

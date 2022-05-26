@@ -27,7 +27,7 @@ class S3Service:
     def upload_file(self, file, key):
         """This method is used to upload the file into s3 bucket"""
         try:
-            self.s3_obj.upload_file(file, self.bucket_name, 'source/'+key)
+            self.s3_obj.upload_file(file, self.bucket_name, key)
             # rew = self.s3_obj.list_objects_v2(Bucket=self.bucket_name)
             # print(rew)
             self.logging.info(file + " sucessfully uploaded into s3")
