@@ -25,7 +25,8 @@ class LoggingDownloadpath:
         logging.basicConfig(
             datefmt="%d-%b-%y %H:%M:%S",
             format="%(asctime)s - %(levelname)s - %(filename)s - %(lineno)d - %(message)s",
-            level=logging.INFO,handlers=[handler]
+            level=logging.INFO,
+            handlers=[handler],
         )
         logger = logging.getLogger(name)
         # logger.addHandler(handler)

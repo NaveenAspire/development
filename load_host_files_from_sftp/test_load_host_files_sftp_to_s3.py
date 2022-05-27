@@ -31,6 +31,7 @@ def lpath():
     )
     return file_path
 
+
 @pytest.fixture
 def wrong_lpath():
     file_path = os.path.join(
@@ -53,10 +54,12 @@ def file_name():
     file_name = "ASP_20220418.zip"
     return file_name
 
+
 @pytest.fixture
 def wrong_file_name():
     file_name = "20220418.zip"
     return file_name
+
 
 @pytest.fixture
 def path():
@@ -97,6 +100,7 @@ def bucket_path():
     bucket_path_name = config.get("s3", "bucket_path")
     return bucket_path_name
 
+
 @pytest.fixture
 def s3_client():
     """This is the fixture for mocking s3 service"""
@@ -104,14 +108,17 @@ def s3_client():
         conn = boto3.client("s3", region_name="us-east-1")
         print(conn)
         yield conn
-        
+
+
 @pytest.fixture
 def prefix():
     return "source"
 
+
 @pytest.fixture
 def wrong_prefix():
     return "wrong_prefix"
+
 
 # @pytest.fixture
 # def s3_test(s3_client, bucket):
@@ -158,49 +165,48 @@ class Test_SftpConnection:
 
 class Test_s3:
     """This class will test all success and failure cases for s3 module"""
+
     @pytest.fixture
-    def s3_test(self,s3_client, bucket):
+    def s3_test(self, s3_client, bucket):
         """This is the fixture for creating s3 bucket"""
         print(s3_client)
         self.res = s3_client.create_bucket(Bucket=bucket)
         yield
-    
+
     def test_s3_object(self):
         """This method test the instance belong to the class of S3Service"""
         self.s3_obj = S3Service(logger)
         assert isinstance(self.s3_obj, S3Service)
 
-    def test_upload_file_done(self, key, file,s3_client,s3_test):
+    def test_upload_file_done(self, key, file, s3_client, s3_test):
         """This method will test file is sucessfully uploaded"""
         self.my_client = S3Service(logger)
         response = self.my_client.upload_file(file, key)
         assert response == key
 
     @pytest.mark.xfail
-    def test_upload_file_not_done(
-        self, key,s3_client,s3_test,file
-    ):
+    def test_upload_file_not_done(self, key, s3_client, s3_test, file):
         """This method will test file is not sucessfully uploaded"""
         self.my_client = S3Service(logger)
         response = self.my_client.upload_file("file", key)
         assert not response
-        
-    def test_get_file_list_done(
-        self,s3_client,s3_test,file,key
-    ):
+
+    def test_get_file_list_done(self, s3_client, s3_test, file, key):
         """This method will test whether get file list successfully"""
         self.my_client = S3Service(logger)
-        self.my_client.s3_obj.upload_file(file, 'msg-practice-induction', 'source/'+key)
+        self.my_client.s3_obj.upload_file(
+            file, "msg-practice-induction", "source/" + key
+        )
         response = self.my_client.get_file_list("source/")
-        assert isinstance(response,list)
-    
+        assert isinstance(response, list)
+
     @pytest.mark.xfail
-    def test_get_file_list_not_done(
-        self,s3_client,s3_test,file,key
-    ):
+    def test_get_file_list_not_done(self, s3_client, s3_test, file, key):
         """This method will test whether get file list not successful"""
         self.my_client = S3Service(logger)
-        self.my_client.s3_obj.upload_file(file, 'msg-practice-induction', 'source/'+key)
+        self.my_client.s3_obj.upload_file(
+            file, "msg-practice-induction", "source/" + key
+        )
         response = self.my_client.get_file_list("sourc/")
         assert not response
 
@@ -234,9 +240,7 @@ class Test_LoadHostAspireFiles:
         assert isinstance(response, str)
 
     @pytest.mark.xfail
-    def test_upload_host_files_to_s3_not_done(
-        self, wrong_lpath, path
-    ):
+    def test_upload_host_files_to_s3_not_done(self, wrong_lpath, path):
         """This method will test whether upload host files to s3 not success"""
         self.obj = LoadHostFilesSftpToS3()
         response = self.obj.upload_host_files_to_s3(wrong_lpath, path)
@@ -248,10 +252,14 @@ class Test_LoadHostAspireFiles:
         assert response == partition
 
     @pytest.mark.xfail
-    def test_get_partition_path_not_done(self, wrong_file_name,):
+    def test_get_partition_path_not_done(
+        self,
+        wrong_file_name,
+    ):
         """This method will test whether it get partition is not successful"""
         response = get_partition(wrong_file_name)
         assert response == None
+
 
 class Test_dummy_s3:
     """This class will test the dummy_s3 module methods"""
@@ -260,16 +268,16 @@ class Test_dummy_s3:
         """This method will test the instance belong to the class of DummyS3"""
         self.obj = DummyS3(config, logger)
         assert isinstance(self.obj, DummyS3)
-        
-    def test_get_file_list_done(self,prefix):
+
+    def test_get_file_list_done(self, prefix):
         """This method will test the whether the
         file list successfully get from dummy s3"""
         self.obj = DummyS3(config, logger)
         response = self.obj.get_file_list(prefix)
-        assert isinstance(response,list)
-    
-    @pytest.mark.xfail    
-    def test_get_file_list_not_done(self,wrong_prefix):
+        assert isinstance(response, list)
+
+    @pytest.mark.xfail
+    def test_get_file_list_not_done(self, wrong_prefix):
         """This method will test the whether the
         file list successfully get from dummy s3"""
         self.obj = DummyS3(config, logger)
@@ -292,6 +300,7 @@ class Test_dummy_s3:
         print(response)
         assert response is False
 
+
 class Test_dummy_sftp:
     """This class will test the dummy_s3 module methods"""
 
@@ -299,15 +308,15 @@ class Test_dummy_sftp:
         """This method will test the instance belong to the class of DummySftp"""
         self.obj = DummySftp(config, logger)
         assert isinstance(self.obj, DummySftp)
-        
+
     def test_list_files_done(self):
         """This method will test the whether the
         file list successfully get from dummy sftp"""
         self.obj = DummySftp(config, logger)
         response = self.obj.list_files()
-        assert isinstance(response,list)
-    
-    @pytest.mark.xfail    
+        assert isinstance(response, list)
+
+    @pytest.mark.xfail
     def test_list_files_not_done(self):
         """This method will test the whether the
         file list successfully get from dummy sftp"""
@@ -316,19 +325,19 @@ class Test_dummy_sftp:
         response = self.obj.list_files()
         assert not response
 
-    def test_get_new_file_only_done(self,lpath,prefix):
+    def test_get_new_file_only_done(self, lpath, prefix):
         """This method will test whether the dummy sftp get new file list is success"""
         self.obj = DummySftp(config, logger)
         self.dummy_s3 = DummyS3(config, logger)
         file_exist_list = self.dummy_s3.get_file_list(prefix)
-        response = self.obj.get_new_file_only(lpath,file_exist_list)
+        response = self.obj.get_new_file_only(lpath, file_exist_list)
         assert response == lpath
 
     @pytest.mark.xfail
-    def test_get_new_file_only_not_done(self,wrong_lpath,prefix):
+    def test_get_new_file_only_not_done(self, wrong_lpath, prefix):
         """This method will test whether the dummy sftp get new file list is success"""
         self.obj = DummySftp(config, logger)
         self.dummy_s3 = DummyS3(config, logger)
         file_exist_list = self.dummy_s3.get_file_list(prefix)
-        response = self.obj.get_new_file_only(wrong_lpath,file_exist_list)
+        response = self.obj.get_new_file_only(wrong_lpath, file_exist_list)
         assert not response

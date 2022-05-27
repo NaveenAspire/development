@@ -34,6 +34,7 @@ class LoadHostFilesSftpToS3:
         )
         self.bucket_source_path = config["load_host_files"]["bucket_source_path"]
         self.bucket_stage_path = config["load_host_files"]["bucket_stage_path"]
+        self.rpath = config["load_host_files"]["sftp_rpath"]
         # self.sftp_obj = SftpCon(config, logger)
         # self.s3_obj = S3Service(logger)
         self.dummy_s3 = DummyS3(config, logger)
@@ -46,20 +47,17 @@ class LoadHostFilesSftpToS3:
         try:
             # s3_files = self.s3_obj.get_file_list("source/")
             s3_files = self.dummy_s3.get_file_list("host-aspire/source/")  # local
-            s3_files = [file.split("/")[-1] for file in s3_files]
-            # response = self.sftp_obj.get_new_file_only(self.zip_download_path, s3_files)
-            response = self.dummy_sftp.get_new_file_only(
-                self.zip_download_path, s3_files
-            )  # local
-            if not response :
-                sys.exit("Files are uploaded upto date...")
+            s3_files = [file.split("/")[-1] for file in s3_files] 
+            self.get_new_sftp_files(s3_files)  
             for file in os.listdir(self.zip_download_path):
                 with ZipFile(
                     os.path.join(self.zip_download_path, file), "r"
                 ) as zip_file:
                     zip_file.extractall(self.txt_download_path)
             logger.info("zip files Sucessfully downloaded to local")
-            self.upload_host_files_to_s3(self.zip_download_path, self.bucket_source_path)
+            self.upload_host_files_to_s3(
+                self.zip_download_path, self.bucket_source_path
+            )
             logger.info("zip files Sucessfully uploaded to s3")
             self.upload_host_files_to_s3(self.txt_download_path, self.bucket_stage_path)
             logger.info("txt files Sucessfully uploaded to s3")
@@ -70,6 +68,24 @@ class LoadHostFilesSftpToS3:
             logger.info("error occured such as %s", err)
             response = False
         return response
+
+    def get_new_sftp_files(self, s3_files):
+        """This method will download the files from sftp which are not in s3"""
+        try:
+            # sftp_files = self.sftp_obj.list_files(self.rpath)
+            sftp_files = self.dummy_sftp.list_files(self.rpath)
+            new_files = list(set(sftp_files) - set(s3_files))
+            if not new_files:
+                sys.exit("There are no new files. All are upto date...")
+            print(new_files)
+            for file in new_files:
+                # self.sftp_obj.get_file(os.path.join(self.rpath,file),self.zip_download_path)
+                self.dummy_sftp.get_file(self.rpath + file, self.zip_download_path, file) #local
+        except Exception as err:
+            print(err)
+            error = err
+            logger.error("Error occured while getting sftp files such as : %s",err)
+        return not "error" in locals()
 
     def upload_host_files_to_s3(self, file_path, bucket_path):
         """This method will upload the both zip files and txt files into appropriate paths"""

@@ -23,7 +23,7 @@ class DummyS3:
             self.logging.info("Successfully got the file list from dummy s3...")
         except Exception as err:
             print(err)
-            self.logging.error("Error occured while getting s3 file list %s",err)
+            self.logging.error("Error occured while getting s3 file list %s", err)
             file_list = None
         return file_list
 

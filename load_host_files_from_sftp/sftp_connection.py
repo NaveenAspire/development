@@ -23,22 +23,17 @@ class SftpCon:
             self.logging.info("Successfully get the sftp file list...")
         except Exception as err:
             print(err)
-            self.logging.error("Error occured while getting sftp file list as %s",err)
+            self.logging.error("Error occured while getting sftp file list as %s", err)
             sftp_file_list = None
         return sftp_file_list
 
-    def get_new_file_only(self, lpath, file_exist_list):
-        """This method that retrieve the new files created in server only"""
+    def get_file(self, rpath, lpath):
+        """This method will download the file which you
+        pass as param in the local path given in param"""
         try:
-            sftp_files = self.list_files()
-            files = np.setdiff1d(sftp_files,file_exist_list)
-            print(files)
-            for file in files:
-                self.conn.get(self.r_path + "/" + file, lpath + "/" + file)
-            self.conn.close()
-            self.logging.info("Successfully get new file list...")
+            self.conn.get(rpath, lpath)
         except Exception as err:
-            self.logging.error("Error occured while getting new files : %s", err)
             print(err)
-            lpath = None
-        return lpath
+            error = err
+            self.logging.error("Error occured while downloading file : %s", err)
+        return not "error" in locals()
