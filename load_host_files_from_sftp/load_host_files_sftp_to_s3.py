@@ -9,8 +9,6 @@ import sys
 from zipfile import ZipFile
 from logging_and_download_path import LoggingDownloadpath, parent_dir
 from S3.s3 import S3Service
-from dummy_S3.dummy_s3 import DummyS3
-from dummy_sftp import DummySftp
 from sftp_connection import SftpCon
 
 config = configparser.ConfigParser()
@@ -35,18 +33,15 @@ class LoadHostFilesSftpToS3:
         self.bucket_source_path = config["load_host_files"]["bucket_source_path"]
         self.bucket_stage_path = config["load_host_files"]["bucket_stage_path"]
         self.rpath = config["load_host_files"]["sftp_rpath"]
-        # self.sftp_obj = SftpCon(config, logger)
-        # self.s3_obj = S3Service(logger)
-        self.dummy_s3 = DummyS3(config, logger)
-        self.dummy_sftp = DummySftp(config, logger)
+        self.sftp_obj = SftpCon(config, logger)
+        self.s3_obj = S3Service(logger)
 
     def download_host_files(
         self,
     ):
         """This method will download all the host aspire zipfiles from sftp"""
         try:
-            # s3_files = self.s3_obj.get_file_list("source/")
-            s3_files = self.dummy_s3.get_file_list("host-aspire/source/")  # local
+            s3_files = self.s3_obj.get_file_list("source/")
             s3_files = [file.split("/")[-1] for file in s3_files] 
             self.get_new_sftp_files(s3_files)  
             for file in os.listdir(self.zip_download_path):
@@ -72,15 +67,13 @@ class LoadHostFilesSftpToS3:
     def get_new_sftp_files(self, s3_files):
         """This method will download the files from sftp which are not in s3"""
         try:
-            # sftp_files = self.sftp_obj.list_files(self.rpath)
-            sftp_files = self.dummy_sftp.list_files(self.rpath)
+            sftp_files = self.sftp_obj.list_files(self.rpath)
             new_files = list(set(sftp_files) - set(s3_files))
             if not new_files:
                 sys.exit("There are no new files. All are upto date...")
             print(new_files)
             for file in new_files:
-                # self.sftp_obj.get_file(os.path.join(self.rpath,file),self.zip_download_path)
-                self.dummy_sftp.get_file(self.rpath + file, self.zip_download_path, file) #local
+                self.sftp_obj.get_file(os.path.join(self.rpath,file),self.zip_download_path)
         except Exception as err:
             print(err)
             error = err
@@ -93,10 +86,7 @@ class LoadHostFilesSftpToS3:
             for file in os.listdir(file_path):
                 partition = get_partition(file.split(".")[0])
                 key = os.path.join(bucket_path, partition)
-                response = self.dummy_s3.upload_dummy_local_s3(
-                    os.path.join(file_path, file), key
-                )  # local
-                # response = self.s3_obj.upload_file(os.path.join(file_path, file), key)
+                response = self.s3_obj.upload_file(os.path.join(file_path, file), key)
             response = True
         except Exception as err:
             print(err)

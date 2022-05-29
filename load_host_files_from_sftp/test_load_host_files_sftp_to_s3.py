@@ -8,8 +8,6 @@ import pytest
 from sftp_connection import SftpCon
 from load_host_files_sftp_to_s3 import LoadHostFilesSftpToS3, get_partition
 from S3.s3 import S3Service
-from dummy_S3.dummy_s3 import DummyS3
-from dummy_sftp import DummySftp
 from moto import mock_s3
 from logging_and_download_path import (
     LoggingDownloadpath,
@@ -259,85 +257,3 @@ class Test_LoadHostAspireFiles:
         """This method will test whether it get partition is not successful"""
         response = get_partition(wrong_file_name)
         assert response == None
-
-
-class Test_dummy_s3:
-    """This class will test the dummy_s3 module methods"""
-
-    def test_dummy_s3_obj(self):
-        """This method will test the instance belong to the class of DummyS3"""
-        self.obj = DummyS3(config, logger)
-        assert isinstance(self.obj, DummyS3)
-
-    def test_get_file_list_done(self, prefix):
-        """This method will test the whether the
-        file list successfully get from dummy s3"""
-        self.obj = DummyS3(config, logger)
-        response = self.obj.get_file_list(prefix)
-        assert isinstance(response, list)
-
-    @pytest.mark.xfail
-    def test_get_file_list_not_done(self, wrong_prefix):
-        """This method will test the whether the
-        file list successfully get from dummy s3"""
-        self.obj = DummyS3(config, logger)
-        response = self.obj.get_file_list(wrong_prefix)
-        assert not response
-
-    def test_upload_dummy_local_s3_done(self, path, file, partition):
-        """This method will test whether the upload to dummy s3 is success"""
-        self.obj = DummyS3(config, logger)
-        dest = path + partition
-        response = self.obj.upload_dummy_local_s3(file, dest)
-        assert response is True
-
-    @pytest.mark.xfail
-    def test_upload_dummy_local_s3_not_done(self, path, partition):
-        """This method will test whether the upload to dummy s3 is not success"""
-        self.obj = DummyS3(config, logger)
-        dest = path + partition
-        response = self.obj.upload_dummy_local_s3("unavilable_file", dest)
-        print(response)
-        assert response is False
-
-
-class Test_dummy_sftp:
-    """This class will test the dummy_s3 module methods"""
-
-    def test_dummy_sftp_obj(self):
-        """This method will test the instance belong to the class of DummySftp"""
-        self.obj = DummySftp(config, logger)
-        assert isinstance(self.obj, DummySftp)
-
-    def test_list_files_done(self):
-        """This method will test the whether the
-        file list successfully get from dummy sftp"""
-        self.obj = DummySftp(config, logger)
-        response = self.obj.list_files()
-        assert isinstance(response, list)
-
-    @pytest.mark.xfail
-    def test_list_files_not_done(self):
-        """This method will test the whether the
-        file list successfully get from dummy sftp"""
-        self.obj = DummySftp(config, logger)
-        self.obj.dest_rpath = "unavailable"
-        response = self.obj.list_files()
-        assert not response
-
-    def test_get_new_file_only_done(self, lpath, prefix):
-        """This method will test whether the dummy sftp get new file list is success"""
-        self.obj = DummySftp(config, logger)
-        self.dummy_s3 = DummyS3(config, logger)
-        file_exist_list = self.dummy_s3.get_file_list(prefix)
-        response = self.obj.get_new_file_only(lpath, file_exist_list)
-        assert response == lpath
-
-    @pytest.mark.xfail
-    def test_get_new_file_only_not_done(self, wrong_lpath, prefix):
-        """This method will test whether the dummy sftp get new file list is success"""
-        self.obj = DummySftp(config, logger)
-        self.dummy_s3 = DummyS3(config, logger)
-        file_exist_list = self.dummy_s3.get_file_list(prefix)
-        response = self.obj.get_new_file_only(wrong_lpath, file_exist_list)
-        assert not response
