@@ -1,6 +1,7 @@
 """This module used for connecting api with the authentication
 and fetch the data based on the endpoint called"""
 
+import traceback
 from cryptography.fernet import Fernet
 import requests
 import pandas as pd
@@ -65,18 +66,21 @@ def pagination(endpoint, params):
         dfs = []
         while True:
             response = requests.get(endpoint, params=params)
+            print(response)
             if response.status_code != 200:
                 raise Exception(
                     f"Your endpoint '{endpoint}' returns status code '{response.status_code}'"
                 )
             json_response = response.json()
-            data_frame = pd.DataFrame.from_records(json_response.get("results"))
+            results = list(filter(None, json_response.get("results")))
+            data_frame = pd.DataFrame.from_records(results)
             dfs.append(data_frame)
             endpoint = json_response.get("next")
             if not endpoint:
                 break
         data_frame = pd.concat(dfs)
     except Exception as err:
+        print(traceback.format_exc())
         print(f"Error occured : {err}")
         data_frame = None
     return data_frame

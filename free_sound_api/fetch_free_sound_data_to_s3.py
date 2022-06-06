@@ -17,20 +17,6 @@ config.read(os.path.join(parent_dir, "develop.ini"))
 logger_download = LoggingDownloadpath(config)
 logger = logger_download.set_logger("fetch_free_sound_api_data")
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--sound_id", type=str, help="Enter sound id for fetch similar sounds"
-)
-parser.add_argument("--username", type=str, help="Enter username for fetch user packs")
-parser.add_argument(
-    "endpoint",
-    choices=["sound_similar", "user_packs"],
-    help="Choose from choices for get single endpoint response either 'sound_similar' or 'user_packs'",
-)
-args = parser.parse_args()
-
-
 class FetchDataFromFreeSoundApi:
     """This class for fetching data from free sound api and
     upload the response as json file into s3 with partition"""
@@ -45,8 +31,7 @@ class FetchDataFromFreeSoundApi:
         self.download_path = logger_download.set_downloadpath("free_sound_api")
         # self.s3_service = S3Service(logger)
         self.temp_s3 = TempS3(config, logger)
-        self.similar_sound_path = config["fetch_free_sound_data"]["similar_sound_bpath"]
-        self.user_packs_path = config["fetch_free_sound_data"]["user_packs_bpath"]
+        self.section = config["fetch_free_sound_data"]
 
     def fetch_similar_sounds(self, sound_id):
         """This method get the similar sound of the gieven sound id
@@ -59,14 +44,15 @@ class FetchDataFromFreeSoundApi:
             today = datetime.strftime(datetime.now().today().date(), "%Y-%m-%d")
             if response is None:
                 sys.exit("Data does not get from api")
+            
             create_json = self.create_json_file(response, f"{sound_id}.json")
             key = os.path.join(
-                self.similar_sound_path, self.get_partition(today), f"{sound_id}.json"
+                self.section.get('similar_sound_bpath'), self.get_partition(today), f"{sound_id}.json"
             )
             # self.s3_service.upload_file(create_json, key)
             self.temp_s3.upload_local_s3(
                 create_json,
-                os.path.join(self.similar_sound_path, self.get_partition(today)),
+                os.path.join(self.section.get('similar_sound_bpath'), self.get_partition(today)),
             )
             # shutil.rmtree(self.download_path)
             logger.info("Download Folder cleaned successfully...")
@@ -92,17 +78,17 @@ class FetchDataFromFreeSoundApi:
                     file_name = f"{(unique.split('T')[0]).replace('-','')}.json"
                     create_json = self.create_json_file(new_df, file_name)
                     print(file_name)
+                    print(self.section.get('user_packs_bpath'))
                     key = os.path.join(
-                        self.similar_sound_path,
+                        self.section.get('user_packs_bpath'),
                         self.get_partition(unique.split("T")[0]),
                         file_name,
                     )
-
                     # self.s3_service.upload_file(create_json,key)
                     self.temp_s3.upload_local_s3(
                         create_json,
                         os.path.join(
-                            self.user_packs_path,
+                            self.section.get('user_packs_bpath'),
                             self.get_partition(unique.split("T")[0]),
                         ),
                     )
@@ -142,6 +128,17 @@ class FetchDataFromFreeSoundApi:
 
 def main():
     """This is the main method of this module"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--sound_id", type=str, help="Enter sound id for fetch similar sounds"
+    )
+    parser.add_argument("--username", type=str, help="Enter username for fetch user packs")
+    parser.add_argument(
+        "endpoint",
+        choices=["sound_similar", "user_packs"],
+        help="Choose from choices for get single endpoint response either 'sound_similar' or 'user_packs'",
+    )
+    args = parser.parse_args()
     fetch_data = FetchDataFromFreeSoundApi()
     if args.endpoint == "sound_similar" and args.sound_id:
         fetch_data.fetch_similar_sounds(args.sound_id)
