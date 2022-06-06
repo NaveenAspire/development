@@ -66,11 +66,19 @@ def path():
 
 
 @pytest.fixture
-def partition(partition_variable):
-    date_obj = datetime.strptime(partition_variable, "%Y-%m-%d")
-    partition_path = date_obj.strftime(f"pt_year=%Y/pt_month=%m/pt_day=%d/")
+def partition(file_name):
+    date = datetime.strptime(file_name.split(".")[0], "ASP_%Y%m%d").date()
+    partition_path = datetime.strftime(date, "pt_year=%Y/pt_month=%m/pt_day=%d/")
     return partition_path
 
+
+@pytest.fixture
+def file(file_name, lpath):
+    file_name = os.path.join(
+        lpath,
+        file_name,
+    )
+    return file_name
 
 
 @pytest.fixture
