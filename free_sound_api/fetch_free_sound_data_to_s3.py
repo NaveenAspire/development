@@ -17,6 +17,7 @@ config.read(os.path.join(parent_dir, "develop.ini"))
 logger_download = LoggingDownloadpath(config)
 logger = logger_download.set_logger("fetch_free_sound_api_data")
 
+
 class FetchDataFromFreeSoundApi:
     """This class for fetching data from free sound api and
     upload the response as json file into s3 with partition"""
@@ -44,22 +45,27 @@ class FetchDataFromFreeSoundApi:
             today = datetime.strftime(datetime.now().today().date(), "%Y-%m-%d")
             if response is None:
                 sys.exit("Data does not get from api")
-            
+
             create_json = self.create_json_file(response, f"{sound_id}.json")
             key = os.path.join(
-                self.section.get('similar_sound_bpath'), self.get_partition(today), f"{sound_id}.json"
+                self.section.get("similar_sound_bpath"),
+                self.get_partition(today),
+                f"{sound_id}.json",
             )
             # self.s3_service.upload_file(create_json, key)
             self.temp_s3.upload_local_s3(
                 create_json,
-                os.path.join(self.section.get('similar_sound_bpath'), self.get_partition(today)),
+                os.path.join(
+                    self.section.get("similar_sound_bpath"), self.get_partition(today)
+                ),
             )
             # shutil.rmtree(self.download_path)
             logger.info("Download Folder cleaned successfully...")
         except Exception as err:
             logger.exception(err)
-            print(err)
-        return True
+            error = err
+            print(error)
+        return not "error" in locals()
 
     def fetch_user_packs(self, username):
         """This method get the packs which created by the user
@@ -78,9 +84,8 @@ class FetchDataFromFreeSoundApi:
                     file_name = f"{(unique.split('T')[0]).replace('-','')}.json"
                     create_json = self.create_json_file(new_df, file_name)
                     print(file_name)
-                    print(self.section.get('user_packs_bpath'))
                     key = os.path.join(
-                        self.section.get('user_packs_bpath'),
+                        self.section.get("user_packs_bpath"),
                         self.get_partition(unique.split("T")[0]),
                         file_name,
                     )
@@ -88,7 +93,7 @@ class FetchDataFromFreeSoundApi:
                     self.temp_s3.upload_local_s3(
                         create_json,
                         os.path.join(
-                            self.section.get('user_packs_bpath'),
+                            self.section.get("user_packs_bpath"),
                             self.get_partition(unique.split("T")[0]),
                         ),
                     )
@@ -96,21 +101,26 @@ class FetchDataFromFreeSoundApi:
             logger.info("Download Folder cleaned successfully...")
         except Exception as err:
             logger.exception(err)
-            print(err)
-        return True
+            error = err
+            print(error)
+        return not "error" in locals()
 
     def create_json_file(self, data_frame, file_name):
         """This method create the json file for the given dataframe as name given
         Parameter :
             data_frame : The dataframe need to be create as json file
             file_name : The name of the file which going to create"""
-        data_frame.to_json(
-            os.path.join(self.download_path, file_name),
-            orient="records",
-            lines=True,
-        )
-        file_path = os.path.join(self.download_path, file_name)
-        logger.info("Json file created successfully as name %s", file_name)
+        try:
+            data_frame.to_json(
+                os.path.join(self.download_path, file_name),
+                orient="records",
+                lines=True,
+            )
+            file_path = os.path.join(self.download_path, file_name)
+            logger.info("Json file created successfully as name %s", file_name)
+        except Exception as err:
+            print(err)
+            file_path = None
         return file_path
 
     def get_partition(self, partition_variable):
@@ -132,7 +142,9 @@ def main():
     parser.add_argument(
         "--sound_id", type=str, help="Enter sound id for fetch similar sounds"
     )
-    parser.add_argument("--username", type=str, help="Enter username for fetch user packs")
+    parser.add_argument(
+        "--username", type=str, help="Enter username for fetch user packs"
+    )
     parser.add_argument(
         "endpoint",
         choices=["sound_similar", "user_packs"],

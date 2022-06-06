@@ -1,7 +1,6 @@
 """This module used for connecting api with the authentication
 and fetch the data based on the endpoint called"""
 
-import traceback
 from cryptography.fernet import Fernet
 import requests
 import pandas as pd
@@ -18,13 +17,14 @@ class FreeSoundApi:
             config : configParser object
         """
         self.config = config_obj
-        fernet_key = self.config["free_sound_api"]["fernet_key"]
+        self.section = config_obj["free_sound_api"]
+        fernet_key = self.section.get("fernet_key")
         fernet = Fernet(fernet_key)
-        encrypted_key = bytes(self.config["free_sound_api"]["access_token"], "utf-8")
+        encrypted_key = bytes(self.section.get("access_token"), "utf-8")
         access_key = fernet.decrypt(encrypted_key).decode()
         self.params = {
             "token": access_key,
-            "page_size": 100,
+            "page_size": 150,
         }
 
     def similar_sounds(self, sound_id):
@@ -35,9 +35,7 @@ class FreeSoundApi:
         Returns:
             dataframe : collection of json responses as dataframe.
         """
-        endpoint = self.config["free_sound_api"]["similar_sound"].replace(
-            "<sound_id>", sound_id
-        )
+        endpoint = self.section.get("similar_sound").replace("<sound_id>", sound_id)
         response = pagination(endpoint, self.params)
         return response
 
@@ -48,12 +46,11 @@ class FreeSoundApi:
         Returns :
             data_frame : collection json responses as dataframe"""
 
-        endpoint = self.config["free_sound_api"]["user_packs"].replace(
-            "<username>", username
-        )
+        endpoint = self.section.get("user_packs").replace("<username>", username)
 
         response = pagination(endpoint, self.params)
         return response
+
 
 def pagination(endpoint, params):
     """This method used to paginate the response and get the response as single dataframe
@@ -80,7 +77,6 @@ def pagination(endpoint, params):
                 break
         data_frame = pd.concat(dfs)
     except Exception as err:
-        print(traceback.format_exc())
         print(f"Error occured : {err}")
         data_frame = None
     return data_frame
