@@ -20,6 +20,7 @@ class EbirdApi :
         encrypted_key = bytes(self.section.get("access_token"), "utf-8")
         access_key = fernet.decrypt(encrypted_key).decode()
         print(access_key)
-        # self.headers = {
-        #     "token": access_key,
-        # }
+        self.headers = {
+            "X-eBirdApiToken": access_key,
+        }
+        

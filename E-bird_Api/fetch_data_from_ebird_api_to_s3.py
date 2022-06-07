@@ -4,6 +4,7 @@ s3 with partition based on date"""
 
 import argparse
 import configparser
+from datetime import datetime
 import os
 from logging_and_download_path import LoggingDownloadpath, parent_dir
 import pandas as pd
@@ -24,8 +25,26 @@ class FetchDataFromEbirdApi :
         self.download_path = logger_download.set_downloadpath("fetch_ebird_api_data")
         self.section = config["fetch_ebird_api_data"]
         
+def validate_date():
+    pass
+        
 def main():
     """This is main function for this module"""
+    parser = argparse.ArgumentParser(
+        description="This argparser used for get dates fro user for fetching the data from api"
+    )
+    parser.add_argument(
+        "--s_date",
+        help="Enter date in the following format YYYY-MM-DD",
+        type=validate_date,
+        default=datetime.now().date(),
+    )
+    parser.add_argument(
+        "--e_date",
+        help="Enter date in the following format YYYY-MM-DD",
+        type=validate_date,
+    )
+    args = parser.parse_args()
     fetch_data = FetchDataFromEbirdApi()
     
 if __name__ == "__main__" :
