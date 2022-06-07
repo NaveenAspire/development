@@ -42,8 +42,8 @@ class LoadHostFilesSftpToS3:
         """This method will download all the host aspire zipfiles from sftp"""
         try:
             s3_files = self.s3_obj.get_file_list("source/")
-            s3_files = [file.split("/")[-1] for file in s3_files] 
-            self.get_new_sftp_files(s3_files)  
+            s3_files = [file.split("/")[-1] for file in s3_files]
+            self.get_new_sftp_files(s3_files)
             for file in os.listdir(self.zip_download_path):
                 with ZipFile(
                     os.path.join(self.zip_download_path, file), "r"
@@ -73,11 +73,13 @@ class LoadHostFilesSftpToS3:
                 sys.exit("There are no new files. All are upto date...")
             print(new_files)
             for file in new_files:
-                self.sftp_obj.get_file(os.path.join(self.rpath,file),self.zip_download_path)
+                self.sftp_obj.get_file(
+                    os.path.join(self.rpath, file), self.zip_download_path
+                )
         except Exception as err:
             print(err)
             error = err
-            logger.error("Error occured while getting sftp files such as : %s",err)
+            logger.error("Error occured while getting sftp files such as : %s", err)
         return not "error" in locals()
 
     def upload_host_files_to_s3(self, file_path, bucket_path):
