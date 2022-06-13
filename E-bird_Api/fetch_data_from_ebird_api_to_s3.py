@@ -35,10 +35,11 @@ class FetchDataFromEbirdApi:
 
     def fetch_data_for_given_dates(self, s_date, e_date):
         last_run = (
-            datetime.strptime(self.section.get("last_run"), "%Y-%m-%d")
+            datetime.strptime(self.section.get("last_run"), "%Y-%m-%d").date()
             if self.section.get("last_run")
             else None
         )
+        print(last_run)
         self.fetch_data_between_dates(
             s_date, e_date
         ) if s_date and e_date else self.fetch_data_between_dates(
@@ -46,19 +47,10 @@ class FetchDataFromEbirdApi:
         ) if s_date and s_date <= current_date else self.fetch_data_between_dates(
             last_run, current_date
         ) if last_run else self.fetch_data_between_dates(
-            self.section.get("initial_run"), current_date
+           datetime.strptime(self.section.get("initial_run"), "%Y-%m-%d").date(), current_date
         ) if not s_date and not last_run else sys.exit(
             "You were given Wrong input..."
         )
-
-        # if s_date and e_date:
-        #     self.fetch_data_between_dates(s_date, e_date)
-        # elif last_run and s_date < last_run:
-        #     self.fetch_data_between_dates(s_date, last_run)
-        # elif s_date and s_date < current_date:
-        #     self.fetch_data_between_dates(s_date, current_date)
-        # else:
-        #     self.get_response_for_date(last_run)
 
     def fetch_data_between_dates(self, start, end):
         if start > end:
@@ -89,12 +81,17 @@ class FetchDataFromEbirdApi:
     def add_region(self, region):
         try:
             start = datetime.strptime(self.section.get("initial_run"), "%Y-%m-%d").date()
-            while start <= current_date:
-                self.get_response_for_date(start, region)
-                start = start + timedelta(1)
             region_list = ast.literal_eval(self.section.get("region_list"))
-            region_list.append(region)
-            update_ini("fetch_ebird_api_data", "region_list", region_list)
+            if not self.ebird_api.get_historic_observations(region,datetime.strftime(current_date,"%Y/%m/%d")):
+                raise Exception
+            if region not in region_list :
+                while start <= current_date:
+                    self.get_response_for_date(start, region)
+                    start = start + timedelta(1)
+                region_list.append(region)
+                update_ini("fetch_ebird_api_data", "region_list", str(region_list))
+            else:
+                print("The given region already exists...")
         except Exception as err:
             print(err)
             print("This is not a valid region...")
@@ -166,7 +163,6 @@ def main():
         "--s_date",
         help="Enter date in the following format YYYY-MM-DD",
         type=validate_date,
-        default=datetime.now().date(),
     )
     parser.add_argument(
         "--e_date",
