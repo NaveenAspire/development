@@ -89,7 +89,7 @@ class EbirdApi:
             data_Frame : This will be dataframe if response 200 or else None"""
         try:
             response = requests.get(endpoint, headers=self.headers)
-            if not response.status_code == 200:
+            if not response.status_code == 200 or not response.json():
                 raise ValueError("Invalid request")
             data_frame = pd.DataFrame.from_records(response.json())
         except Exception as err:

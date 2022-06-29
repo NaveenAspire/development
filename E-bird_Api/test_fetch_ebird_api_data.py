@@ -84,7 +84,7 @@ def endpoint_name():
 
 @pytest.fixture
 def partition_path(endpoint_name, region, date):
-    date_obj = datetime.strptime(date, "%Y-%m-%d")
+    date_obj = datetime.strptime(date, "%Y/%m/%d")
     partition_path = date_obj.strftime(
         f"{endpoint_name}/pt_region={region}/pt_year=%Y/pt_month=%m/pt_day=%d/"
     )
@@ -106,8 +106,8 @@ def download_path():
 
 
 @pytest.fixture
-def source_path(data_frame_response, file_name, download_path):
-    data_frame_response.to_json(
+def source_path(data_frame, file_name, download_path):
+    data_frame.to_json(
         os.path.join(download_path, file_name),
         orient="records",
         lines=True,
@@ -132,8 +132,9 @@ def path():
 
 
 @pytest.fixture
-def file_name(partition_variable):
-    return f"{partition_variable.replace('-','')}.json"
+def file_name(endpoint_name, date):
+    file_name = f"{endpoint_name}_{date.replace('/','')}.json"
+    return file_name
 
 
 # @pytest.fixture
@@ -142,8 +143,8 @@ def file_name(partition_variable):
 
 
 @pytest.fixture
-def key(partition, file_name):
-    key_name = partition + file_name
+def key(partition_path, file_name):
+    key_name = partition_path + file_name
     return key_name
 
 
@@ -206,7 +207,7 @@ class Test_ebird_api:
         self.ebird_api = EbirdApi(config)
         assert isinstance(self.ebird_api, EbirdApi)
 
-    def test_get_historic_obseravations_is_done(self, wrong_region_code):
+    def test_get_historic_obseravations_is_done(self, region_code, date):
         """This method will test the get historic observations
         method is successfully get data from endpoint"""
         self.ebird_api = EbirdApi(config)
@@ -219,14 +220,14 @@ class Test_ebird_api:
         method is not successfully get data from endpoint"""
         self.ebird_api = EbirdApi(config)
         response = self.ebird_api.get_historic_observations(wrong_region_code, date)
-        assert not response
+        assert response is None
 
     def test_get_top100_contributors_is_done(self, region_code, date):
         """This method will test the get top 100 contributors
         method is not successfully get data from endpoint"""
         self.ebird_api = EbirdApi(config)
         response = self.ebird_api.get_top100_contributors(region_code, date)
-        assert not response
+        assert isinstance(response, pd.DataFrame)
 
     @pytest.mark.xfail
     def test_get_top100_contributors_is_done(self, wrong_region_code, date):
@@ -234,7 +235,7 @@ class Test_ebird_api:
         method is successfully get data from endpoint"""
         self.ebird_api = EbirdApi(config)
         response = self.ebird_api.get_top100_contributors(wrong_region_code, date)
-        assert isinstance(response, pd.DataFrame)
+        assert response is None
 
     def test_get_checklist_feed_is_done(self, region_code, date):
         """This method will test weather the get
@@ -271,92 +272,84 @@ class Test_FetchDataFromEbirdApi:
     """This test class will test the all
     methods in the class FetchDataFromEbirdApi"""
 
-    def test_fetch_data_from_ebird_api_object(self):
+    def test_fetch_data_from_ebird_api_object(self, endpoint_name):
         """This method will test the instance
         belongs to the class of FetchDataFromEbirdApi"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         assert isinstance(self.fetch_data, FetchDataFromEbirdApi)
 
-    def test_fetch_data_for_given_dates_is_done(self, s_date, e_date):
+    def test_fetch_data_for_given_dates_is_done(self, s_date, e_date, endpoint_name):
         """This method will test weather successfully
         fetch data for given dates is done"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         response = self.fetch_data.fetch_data_for_given_dates(s_date, e_date)
         assert response
 
-    def test_fetch_data_between_dates_is_done(self, s_date, e_date):
-        """This method will test weather successfully
-        fetch data between dates is done"""
-        self.fetch_data = FetchDataFromEbirdApi()
-        response = self.fetch_data.fetch_data_between_dates(s_date, e_date)
-        assert response
-
     @pytest.mark.xfail
-    def test_fetch_data_between_dates_is_not_done(self, s_date):
+    def test_fetch_data_between_dates_is_not_done(self, s_date, endpoint_name):
         """This method will test weather successfully
         fetch data between dates is not done"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             response = self.fetch_data.fetch_data_between_dates(s_date, None)
             assert pytest_wrapped_e.type == SystemExit
             assert pytest_wrapped_e.value.code == 42
 
-    def test_get_response_for_date_is_done(self, s_date):
+    def test_get_response_for_date_is_done(self, s_date, endpoint_name, region_code):
         """This method will test weather successfully
         get response for date is done"""
-        self.fetch_data = FetchDataFromEbirdApi()
-        response = self.fetch_data.get_response_for_date(s_date)
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
+        response = self.fetch_data.get_response_for_date(s_date, region_code)
+        print(response)
         assert isinstance(response, pd.DataFrame)
 
     @pytest.mark.xfail
-    def test_get_response_for_date_is_not_done(
-        self,
-    ):
+    def test_get_response_for_date_is_not_done(self, endpoint_name, region_code):
         """This method will test weather successfully
         get response for date is not done"""
-        self.fetch_data = FetchDataFromEbirdApi()
-        response = self.fetch_data.get_response_for_date(None)
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
+        response = self.fetch_data.get_response_for_date(None, region_code)
         assert response is None
 
-    def test_add_region_is_done(self, region):
+    def test_add_region_is_done(self, region, endpoint_name):
         """This method will test weather successfully
         add region is done"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         response = self.fetch_data.add_region(region)
         assert response
 
     @pytest.mark.xfail
-    def test_add_region_is_not_done(self, wrong_region):
+    def test_add_region_is_not_done(self, wrong_region, endpoint_name):
         """This method will test weather successfully
         add region is not done"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         response = self.fetch_data.add_region(wrong_region)
         assert not response
 
-    def test_create_json_is_done(self, data_frame, date, region_code):
+    def test_create_json_is_done(self, data_frame, date, region_code, endpoint_name):
         """This method will test weather the json file created successfully."""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         response = self.fetch_data.create_json_file(data_frame, date, region_code)
         assert response
 
     @pytest.mark.xfail
-    def test_create_json_file_not_done(self, date, region_code):
+    def test_create_json_file_not_done(self, date, region_code, endpoint_name):
         """This method will test weather the json file not created successfully"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         data_frame = None
         response = self.fetch_data.create_json_file(data_frame, date, region_code)
         assert not response
 
-    def test_get_partition_done(self, region_code, date):
+    def test_get_partition_done(self, region_code, date, endpoint_name):
         """This method will test weather partition get successfully"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         response = self.fetch_data.get_partition(region_code, date)
         assert response
 
     @pytest.mark.xfail
-    def test_get_partition_not_done(self, wrong_region_code):
+    def test_get_partition_not_done(self, wrong_region_code, endpoint_name):
         """This method will test weather get partition not successfully"""
-        self.fetch_data = FetchDataFromEbirdApi()
+        self.fetch_data = FetchDataFromEbirdApi(endpoint_name)
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             response = self.fetch_data.get_partition(wrong_region_code, None)
             assert pytest_wrapped_e.type == SystemExit

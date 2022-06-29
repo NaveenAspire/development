@@ -18,42 +18,53 @@ config.read(os.path.join(parent_dir, "develop.ini"))
 logger_download = LoggingDownloadpath(config)
 logger = logger_download.set_logger("fetch_ebird_api_data")
 
-current_date = datetime.now().date()
+default_date = datetime.now().date() - timedelta(1)
 
 
 class FetchDataFromEbirdApi:
     """This class for fetching data from ebird api and create json
     files for the response then upload those files into s3 with partition based on date"""
 
-    def __init__(self, endpoint) -> None:
+    def __init__(self, endpoint, user_regions) -> None:
         """This is init method for the class FetchDataFromEbirdApi"""
         self.ebird_api = EbirdApi(config)
         self.download_path = logger_download.set_downloadpath("fetch_ebird_api_data")
         self.section = config["fetch_ebird_api_data"]
         self.endpoint = endpoint
-        self.region = ast.literal_eval(self.section.get("region_list"))
+        self.region = (
+            ast.literal_eval(self.section.get("region_list"))
+            if not user_regions
+            else user_regions
+        )
+        print(self.region)
 
     def fetch_data_for_given_dates(self, s_date, e_date):
         """This is the function which used to fetch data using user input"""
         last_run = (
-            datetime.strptime(self.section.get("last_run"), "%Y-%m-%d").date()
-            if self.section.get("last_run")
+            datetime.strptime(self.section.get(self.endpoint), "%Y-%m-%d").date()
+            if self.section.get(self.endpoint)
             else None
         )
         response = (
             self.fetch_data_between_dates(s_date, e_date)
             if s_date and e_date
-            else self.fetch_data_between_dates(s_date, current_date)
-            if s_date and s_date <= current_date
-            else self.fetch_data_between_dates(last_run, current_date)
+            else self.fetch_data_between_dates(s_date, default_date)
+            if s_date and s_date <= default_date
+            else self.fetch_data_between_dates(last_run, default_date)
             if last_run
             else self.fetch_data_between_dates(
                 datetime.strptime(self.section.get("initial_run"), "%Y-%m-%d").date(),
-                current_date,
+                default_date,
             )
             if not s_date and not last_run
             else sys.exit("You were given Wrong input...")
         )
+        if not s_date and not e_date:
+            update_ini(
+                "fetch_ebird_api_data",
+                self.endpoint,
+                datetime.strftime(default_date, "%Y-%m-%d"),
+            )
         return response
 
     def fetch_data_between_dates(self, start, end):
@@ -72,11 +83,6 @@ class FetchDataFromEbirdApi:
 
     def get_response_for_date(self, date, region):
         """This method used to fetch data for single date from api class"""
-        # dfs = [self.ebird_api.get_historic_observations(region, date),
-        # self.ebird_api.get_top100_contributors(region, date),
-        # self.ebird_api.get_checklist_feed(region, date)]
-        # for i in dfs :
-        #     self.create_json_file(i,date)
         try:
             date = datetime.strftime(date, "%Y/%m/%d")
 
@@ -94,32 +100,31 @@ class FetchDataFromEbirdApi:
             data_frame = None
         return data_frame
 
-    def add_region(self, region):
+    def add_region(self, region, s_date, e_date):
         """This method used to new add region into the region list"""
         try:
-            start = datetime.strptime(
-                self.section.get("initial_run"), "%Y-%m-%d"
-            ).date()
             region_list = ast.literal_eval(self.section.get("region_list"))
             if (
                 self.ebird_api.get_historic_observations(
-                    region, datetime.strftime(current_date, "%Y/%m/%d")
+                    region, datetime.strftime(default_date, "%Y/%m/%d")
                 )
                 is None
             ):
                 raise Exception
+            start = s_date if s_date else default_date
+            end = e_date if e_date else default_date
             if region not in region_list:
-                while start <= current_date:
+                while start <= end:
                     self.get_response_for_date(start, region)
                     start = start + timedelta(1)
                 region_list.append(region)
                 update_ini("fetch_ebird_api_data", "region_list", str(region_list))
             else:
-                print("The given region already exists...")
+                print(f"The region {region} is already exists...")
         except Exception as err:
             error = err
             print(error)
-            print("This is not a valid region...")
+            print(f"{region} is not a valid region...")
         return not "error" in locals()
 
     def create_json_file(self, data_frame, date, region):
@@ -128,7 +133,7 @@ class FetchDataFromEbirdApi:
             data_frame : The dataframe need to be create as json file
             file_name : The name of the file which going to create"""
         try:
-            file_name = f"{self.endpoint}_{date.replace('/','')}.json"
+            file_name = f"{self.endpoint}_{region}_{date.replace('/','')}.json"
             data_frame.to_json(
                 os.path.join(self.download_path, file_name),
                 orient="records",
@@ -145,12 +150,13 @@ class FetchDataFromEbirdApi:
     def upload_to_s3(self, file_path, date, region):
         """This method will call the get parition method
         for getting partition path and upload to s3."""
-        partition_path = self.get_partition(region, date)
+        key = os.path.join(
+            self.section.get("bucket_path") + self.get_partition(region, date)
+        )
         s3_service = S3Service(logger)
-        # key = self.section.get('bucket_path')+partition_path
         # s3_service.upload_file(file_path,key)
         temp = TempS3(config, logger)
-        temp.upload_local_s3(file_path, partition_path)
+        temp.upload_local_s3(file_path, key)
         return True
 
     def get_partition(self, region, date):
@@ -178,6 +184,18 @@ def validate_date(input_date):
         raise argparse.ArgumentTypeError(msg)
 
 
+def is_region_exists(region):
+    """This function will check if the regions are exists in list"""
+    try:
+        exists_list = config["fetch_ebird_api_data"]["region_list"]
+        if region not in exists_list:
+            raise Exception
+    except Exception:
+        msg = f"{region} regions is not exists"
+        raise argparse.ArgumentTypeError(msg)
+    return region
+
+
 def update_ini(section, name, value):
     """This method used to update the ini file"""
     config.set(section, name, value)
@@ -202,8 +220,15 @@ def main():
     )
     parser.add_argument(
         "--add_region",
-        help="Enter regeion in the following format YYYY-MM-DD",
+        help="Enter new regeions",
         type=str,
+        nargs="+",
+    )
+    parser.add_argument(
+        "--regions",
+        help="Enter regeions",
+        type=is_region_exists,
+        nargs="+",
     )
     parser.add_argument(
         "endpoint",
@@ -212,14 +237,15 @@ def main():
         type=str,
     )
     args = parser.parse_args()
-    fetch_data = FetchDataFromEbirdApi(args.endpoint)
+    fetch_data = FetchDataFromEbirdApi(args.endpoint, args.regions)
+
     if args.add_region:
-        fetch_data.add_region(args.add_region)
+        for region in args.add_region:
+            fetch_data.add_region(region, args.s_date, args.e_date)
+        sys.exit("The valid regions are added...")
+
     fetch_data.fetch_data_for_given_dates(args.s_date, args.e_date)
 
 
 if __name__ == "__main__":
     main()
-    update_ini(
-        "fetch_ebird_api_data", "last_run", datetime.strftime(current_date, "%Y-%m-%d")
-    )
