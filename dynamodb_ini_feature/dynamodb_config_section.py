@@ -11,7 +11,7 @@ import os
 config = configparser.ConfigParser()
 config.read(os.path.join(parent_dir, "develop.ini"))
 logger_download = LoggingDownloadpath(config)
-logger = logger_download.set_logger("fetch_ebird_api_data")
+logger = logger_download.set_logger("dynamodb_config_section")
 
 class DynamodbConfig:
     """This is the class used to create the table for
@@ -55,6 +55,8 @@ def main():
     update_item.add_argument('table',type=str)
     update_item.add_argument('params',type=ast.literal_eval)
     args = parser.parse_args()
+    
+    print(args.__dict__)
     
 
 if __name__ == "__main__":

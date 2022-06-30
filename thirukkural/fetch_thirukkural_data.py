@@ -25,6 +25,18 @@ class FetchThirukkuralData:
         self.download_path = logger_download.set_downloadpath("fetch_thirukkural")
         self.section = config["fetch_thirukkural"]
 
+    def get_response_for_given_input(self, args):
+        """This method will get the response based on the user input"""
+        thirukkural_numbers = (
+            list(range(args.s_num, args.e_num + 1))
+            if args.s_num and args.e_num
+            else args.num
+            if args.num
+            else sys.exit("Please give number...")
+        )
+        for num in thirukkural_numbers:
+            self.fetch_thirukkural(num)
+
     def fetch_thirukkural(self, num):
         """This method will fetch the thirukkural based on the given thirukural num
         Parameter :
@@ -83,16 +95,25 @@ class FetchThirukkuralData:
 def main():
     """This is main function for this module"""
     parser = argparse.ArgumentParser(
-        description="This argparser used for get dates fro user for fetching the data from api"
+        description="This argparser used for get dates for user for fetching the data from api"
     )
     parser.add_argument(
-        "num",
-        help="Enter thirukkural number which you need",
+        "--num", help="Enter thirukkural number which you need", type=int, nargs="+"
+    )
+    parser.add_argument(
+        "--s_num",
+        help="Enter start number of thirukkural which you need",
+        type=int,
+    )
+    parser.add_argument(
+        "--e_num",
+        help="Enter end number of thirukkural which you need",
         type=int,
     )
     args = parser.parse_args()
     fetch_data = FetchThirukkuralData()
-    fetch_data.fetch_thirukkural(args.num)
+    
+    fetch_data.get_response_for_given_input(args)
 
 
 if __name__ == "__main__":

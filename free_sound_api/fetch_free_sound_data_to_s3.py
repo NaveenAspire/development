@@ -46,17 +46,17 @@ class FetchDataFromFreeSoundApi:
             if response is None:
                 sys.exit("Data does not get from api")
 
-            create_json = self.create_json_file(response, f"{sound_id}.json")
-            key = os.path.join(
-                self.section.get("similar_sound_bpath"),
-                self.get_partition(today),
-                f"{sound_id}.json",
-            )
+            create_json = self.create_json_file(response, f"similar_sound_for_{sound_id}.json")
+            # key = os.path.join(
+            #     self.section.get("similar_sound_bpath"),
+            #     self.get_partition(today,id=sound_id),
+            #     f"{sound_id}.json",
+            # )
             # self.s3_service.upload_file(create_json, key)
             self.temp_s3.upload_local_s3(
                 create_json,
                 os.path.join(
-                    self.section.get("similar_sound_bpath"), self.get_partition(today)
+                    self.section.get("similar_sound_bpath"), self.get_partition(today,id=sound_id)
                 ),
             )
             # shutil.rmtree(self.download_path)
@@ -81,14 +81,15 @@ class FetchDataFromFreeSoundApi:
             for unique in unique_list:
                 new_df = response[(response.created == unique)]
                 if not new_df.empty:
-                    file_name = f"{(unique.split('T')[0]).replace('-','')}.json"
+                    pack_id = new_df.id.values[0]
+                    file_name = f"userpacks_{pack_id}_{(unique.split('T')[0]).replace('-','')}.json"
                     create_json = self.create_json_file(new_df, file_name)
                     print(file_name)
-                    key = os.path.join(
-                        self.section.get("user_packs_bpath"),
-                        self.get_partition(unique.split("T")[0]),
-                        file_name,
-                    )
+                    # key = os.path.join(
+                    #     self.section.get("user_packs_bpath"),
+                    #     self.get_partition(unique.split("T")[0],id=pack_id),
+                    #     file_name,
+                    # )
                     # self.s3_service.upload_file(create_json,key)
                     self.temp_s3.upload_local_s3(
                         create_json,
@@ -123,13 +124,19 @@ class FetchDataFromFreeSoundApi:
             file_path = None
         return file_path
 
-    def get_partition(self, partition_variable):
+    def get_partition(self, partition_variable,id=None):
         """This method will make the partition based on given date
         Parameter :
             partition_variable : The date that to be partition"""
         try:
+            print("id :",id)
             date_obj = datetime.strptime(partition_variable, "%Y-%m-%d")
-            partition_path = date_obj.strftime(f"pt_year=%Y/pt_month=%m/pt_day=%d/")
+            partition_path = (
+                date_obj.strftime(f"pt_year=%Y/pt_month=%m/pt_day=%d/")
+                if not id
+                else date_obj.strftime(f"pt_year=%Y/pt_month=%m/pt_day=%d/pt_id={id}")
+            )
+
         except Exception as err:
             print(err)
             sys.exit(f"Script stopped due to {err}")
