@@ -32,7 +32,7 @@ class FetchThirukkuralData:
             if args.s_num and args.e_num
             else args.num
             if args.num
-            else sys.exit("Please give number...")
+            else sys.exit("Please give thirukkural number...")
         )
         for num in thirukkural_numbers:
             self.fetch_thirukkural(num)
@@ -43,12 +43,15 @@ class FetchThirukkuralData:
             num : The thirukkural number
         Return : returns True or False"""
         try:
+            print(f"Thirukkural - {num}")
             thirukkural = Thirukkural(config)
             data_frame = thirukkural.get_thirukkural(num)
             if data_frame is None:
                 raise ValueError("The response is None")
+            logger.info("Successfully get the thirukkural %s",num)
             self.create_json_file(data_frame, num)
         except Exception as err:
+            logger.error("Error occured while getting thirukkural %s",num)
             print(err)
         return data_frame
 
@@ -79,13 +82,14 @@ class FetchThirukkuralData:
         temp = TempS3(config, logger)
         key = os.path.join(self.section.get("bucket_path"), partition_path)
         temp.upload_local_s3(file_path, key)
+        logger.info("File successfully uploaded to s3..")
 
     def get_partition(self, data_frame):
         """This method will make the partition based on given date
         Parameter :
             partition_variable : The date that to be partition"""
         try:
-            partition_path = f"pt_section={data_frame.at[0,'sect_eng']}/pt_chaptergroup={data_frame.at[0,'chapgrp_eng']}/pt_chapter={data_frame.at[0,'chap_eng']}/pt_number={data_frame.at[0,'number']}/"
+            partition_path = f"pt_section={data_frame.at[0,'sect_eng']}/pt_chaptergroup={data_frame.at[0,'chapgrp_eng']}/pt_chapter={data_frame.at[0,'chap_eng'].replace(' ','_')}/pt_number={data_frame.at[0,'number']}/"
         except Exception as err:
             print(err)
             sys.exit(f"Script stopped due to {err}")
@@ -94,6 +98,7 @@ class FetchThirukkuralData:
 
 def main():
     """This is main function for this module"""
+    logger.info("\nScript is started ....")
     parser = argparse.ArgumentParser(
         description="This argparser used for get dates for user for fetching the data from api"
     )

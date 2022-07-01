@@ -24,7 +24,6 @@ class Thirukkural:
         try:
             endpoint = self.section.get("thirukkural_endpoint")
             response = requests.get(endpoint, params={"num": num})
-            print(response.json())
             if not response.status_code == 200:
                 raise ValueError("Invalid request")
             data_frame = pd.DataFrame.from_records([response.json()])

@@ -207,13 +207,13 @@ def main():
     )
     parser.add_argument(
         "--start",
-        help="Enter yeat in the following format YYYY",
+        help="Enter year in the following format YYYY",
         type=validate_year,
         default=int(date.today().year),
     )
     parser.add_argument(
         "--end",
-        help="Enter yeat in the following format YYYY",
+        help="Enter year in the following format YYYY",
         type=validate_year,
     )
     parser.add_argument(
