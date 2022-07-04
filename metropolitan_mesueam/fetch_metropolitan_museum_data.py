@@ -4,7 +4,6 @@ s3 with partition based on given object id"""
 
 import argparse
 import configparser
-from datetime import datetime
 import os
 import sys
 from logging_and_download_path import LoggingDownloadpath, parent_dir
@@ -27,7 +26,7 @@ class FetchMetropolitanMuseumData:
             "fetch_metropolitan_museum_data"
         )
         self.metropolitan_museum = MetropolitanMesuem(config)
-        self.section = config["fetch_metropolitan_museum_data"]
+        self.section = config["metropolitan_museum"]
 
     def fetch_object_details(self, object_id):
         """This method will used to fetch the object detail of given object id"""
@@ -47,7 +46,7 @@ class FetchMetropolitanMuseumData:
             data_frame : The dataframe need to be create as json file
             file_name : The name of the file which going to create"""
         try:
-            file_name = f"{object_id}.json"
+            file_name = f"metropolitan_museum_object_{object_id}.json"
 
             data_frame.to_json(
                 os.path.join(self.download_path, file_name),
@@ -83,30 +82,17 @@ class FetchMetropolitanMuseumData:
         return partition_path
 
 
-def validate_date(input_date):
-    """This method will validate the date given by user
-    Parameter:
-        input_date : The date for validate"""
-    try:
-        return datetime.strptime(input_date, "%Y-%m-%d").date()
-    except ValueError:
-        msg = f"not a valid date: {input_date!r}"
-        raise msg from argparse.ArgumentTypeError(msg)
-
-
 def main():
     """This is main function for this module"""
     parser = argparse.ArgumentParser(
         description="This argparser used for get dates fro user for fetching the data from api"
     )
-    parser.add_argument(
-        "id",
-        help="Enter the object_id ",
-        type=int,
-    )
+    parser.add_argument("id", help="Enter the object_id ", type=int, nargs="+")
     args = parser.parse_args()
     fetch_data = FetchMetropolitanMuseumData()
-    fetch_data.fetch_object_details(args.id)
+    for id in args.id:
+        print(id)
+        fetch_data.fetch_object_details(id)
 
 
 if __name__ == "__main__":

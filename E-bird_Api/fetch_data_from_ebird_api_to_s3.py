@@ -36,7 +36,6 @@ class FetchDataFromEbirdApi:
             if not user_regions
             else user_regions
         )
-        print(self.region)
 
     def fetch_data_for_given_dates(self, s_date, e_date):
         """This is the function which used to fetch data using user input"""

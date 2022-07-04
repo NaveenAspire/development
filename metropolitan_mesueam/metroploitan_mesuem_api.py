@@ -31,8 +31,6 @@ class MetropolitanMesuem:
             if not response.status_code == 200:
                 raise ValueError("Invalid request")
             data_frame = pd.DataFrame.from_records([response.json()])
-            print(response.json())
-            print(data_frame)
         except Exception as err:
             print(err)
             data_frame = None

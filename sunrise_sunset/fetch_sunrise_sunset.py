@@ -29,31 +29,29 @@ class FetchDataFromSunriseSunsetApi:
             "fetch_sunreise_sunset_api_data"
         )
         self.section = config["fetch_sunrise_sunset_data"]
-        self.exists_cities = ast.literal_eval(self.section.get('cities'))
-        
-    def add_city_to_config(self,args):
+        self.exists_cities = ast.literal_eval(self.section.get("cities"))
+
+    def add_city_to_config(self, args):
         """This method will add the city to config with latitude and logitude value and fetch data for date"""
-        try :
+        try:
             geolocator = Nominatim(user_agent="geoapiExercises")
             location = geolocator.reverse(f"{args.lat},{args.lng}")
-            city = location.raw['address'].get('city')
-            if not city == args.city :
+            city = location.raw["address"].get("city")
+            if not city == args.city:
                 sys.exit("Enter the valid city name")
-            city_dict = {'lat':args.lat, 'lng':args.lng}
+            city_dict = {"lat": args.lat, "lng": args.lng}
             if city in self.exists_cities:
                 sys.exit("The given city already exists...")
-            self.fetch_for_given_dates(args,city,args.lat,args.lng)
+            self.fetch_for_given_dates(args, city, args.lat, args.lng)
             self.exists_cities[city] = city_dict
-            update_ini('fetch_sunrise_sunset_data','cities',str(self.exists_cities))
+            update_ini("fetch_sunrise_sunset_data", "cities", str(self.exists_cities))
             # print(cities.get('chennai').get('lat'))
             # for city,data in self.exists_cities.items():
-                
-        except Exception as err :
+
+        except Exception as err:
             print(err)
             sys.exit(f"Script terminated due to {err}")
         return True
-
-
 
     def fetch_for_given_dates(self, args, city, lat, lng):
         """This method will analyis the date input in
@@ -66,13 +64,13 @@ class FetchDataFromSunriseSunsetApi:
             if args.s_date
             else (previous_date, previous_date)
         )
-        if start>end:
+        if start > end:
             logger.error("The date range is wrong...")
             sys.exit("The date range is wrong...")
-        while start <= end :
+        while start <= end:
             print(start)
-            self.fetch_sunrise_sunset_data(start, city, lat,lng)
-            start=start+timedelta(1)
+            self.fetch_sunrise_sunset_data(start, city, lat, lng)
+            start = start + timedelta(1)
 
     def fetch_sunrise_sunset_data(self, date, city, latitude, longitude):
         """This method will get the data about sunrise_sunset details for the given date
@@ -87,8 +85,10 @@ class FetchDataFromSunriseSunsetApi:
             data_frame = sunrise_sunset.get_sunrise_sunset_details(params)
             if data_frame is None:
                 raise ValueError("data frame is None")
-            logger.info(f"The response is successfully get city {city} for the date {date}")
-            self.create_json_file(data_frame, date,city, latitude, longitude)
+            logger.info(
+                f"The response is successfully get city {city} for the date {date}"
+            )
+            self.create_json_file(data_frame, date, city, latitude, longitude)
         except Exception as err:
             logger.error(f"The response not get city {city} for the date {date}")
             error = err
@@ -153,6 +153,7 @@ def validate_date(input_date):
         raise msg from argparse.ArgumentTypeError()
     return date
 
+
 def validate_lat(lat):
     """This method will validate latitude value given by user"""
     try:
@@ -163,6 +164,7 @@ def validate_lat(lat):
         msg = f"not a valid latitude: {lat!r}"
         raise msg from argparse.ArgumentTypeError()
     return lat
+
 
 def validate_lng(lng):
     """This method will validate longitude value given by user"""
@@ -175,11 +177,13 @@ def validate_lng(lng):
         raise msg from argparse.ArgumentTypeError()
     return lng
 
+
 def update_ini(section, name, value):
     """This method used to update the ini file"""
     config.set(section, name, value)
     with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
         config.write(file)
+
 
 def main():
     """This is main function for this module"""
@@ -188,7 +192,7 @@ def main():
         description="This argparser used for get dates fro user for fetching the data from api"
     )
     subparser = parser.add_subparsers()
-    add_city = subparser.add_parser('add_city')
+    add_city = subparser.add_parser("add_city")
     parser.add_argument(
         "--s_date",
         help="Enter date in the following format YYYY-MM-DD",
@@ -199,11 +203,7 @@ def main():
         help="Enter date in the following format YYYY-MM-DD",
         type=validate_date,
     )
-    add_city.add_argument(
-        "--city",
-        help="Enter the city ",
-        type=str
-    )
+    add_city.add_argument("--city", help="Enter the city ", type=str)
     add_city.add_argument(
         "lat",
         help="Enter latitude value for the place",
@@ -216,11 +216,11 @@ def main():
     )
     args = parser.parse_args()
     fetch_data = FetchDataFromSunriseSunsetApi()
-    if args.__dict__.get('city'):
+    if args.__dict__.get("city"):
         fetch_data.add_city_to_config(args)
         sys.exit("The given city successfully added..")
-    for city,val in fetch_data.exists_cities.items() :
-        fetch_data.fetch_for_given_dates(args,city,val.get('lat'),val.get('lng'))
+    for city, val in fetch_data.exists_cities.items():
+        fetch_data.fetch_for_given_dates(args, city, val.get("lat"), val.get("lng"))
     # fetch_data.fetch_for_given_dates(args)
     # fetch_data.fetch_sunrise_sunset_data(args.date, args.lat, args.lng)
 

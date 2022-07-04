@@ -3,8 +3,10 @@ and create the response as json then store json files into
 s3 with partition based on date"""
 
 import argparse
+import ast
 import configparser
 from datetime import datetime, date
+from genericpath import exists
 import os
 import sys
 from logging_and_download_path import LoggingDownloadpath, parent_dir
@@ -23,21 +25,38 @@ class FetchDataFromPublicHolidayApi:
     """This class for fetching data from public_holiday api and create json
     files for the response then upload those files into s3 with partition based on date"""
 
-    def __init__(self) -> None:
+    def __init__(self, user_regions) -> None:
         """This is init method for the class FetchDataFromPublicHolidayApi"""
         self.download_path = logger_download.set_downloadpath(
             "fetch_public_holiday_api_data"
         )
-        self.section = config["fetch_public_holiday_data"]
+        self.section = config["public_holiday_api"]
+        self.region_list = (
+            ast.literal_eval(self.section.get("region_list"))
+            if not user_regions
+            else user_regions
+        )
 
-    def get_data_for_given_year_region(self, args):
+    def add_regions(self, args):
+        """This method used to new add region into the region list"""
+        region_list = ast.literal_eval(self.section.get("region_list"))
+        for region in args.add_regions:
+            self.fetch_next_public_holidays(
+                args.code, args.endpoint
+            ) if args.endpoint == "next_public_holidays" else self.get_data_for_given_year_region(
+                region, args.__dict__
+            )
+            region_list.append(region)
+        update_ini("public_holiday_api", "region_list", str(region_list))
+        sys.exit("The valid regions are added...")
+
+    def get_data_for_given_year_region(self, region, args):
         """This method will used to get data for given year region"""
         years = (
             list(range(args.get("start"), args.get("end") + 1))
             if args.get("end")
             else [int(date.today().year)]
         )
-        print(years)
         if not years:
             sys.exit("The given year or year range is wrong...")
         endpoint_func = (
@@ -46,7 +65,7 @@ class FetchDataFromPublicHolidayApi:
             else self.fetch_long_weekend
         )
         for year in years:
-            endpoint_func(year, args.get("code"), args.get("endpoint"))
+            endpoint_func(year, region, args.get("endpoint"))
         return True
 
     def fetch_public_holidays_data(self, year, country_code, endpoint):
@@ -180,11 +199,24 @@ def validate_year(input_year):
     return year
 
 
+def is_region_exists(region):
+    """This function will check if the regions are exists in list"""
+    try:
+        exists_list = config["public_holiday_api"]["region_list"]
+        if region in exists_list:
+            raise Exception
+    except Exception:
+        print(f"The region {region} is already exists...")
+        msg = f"{region} regions is not exists"
+        raise argparse.ArgumentTypeError(msg)
+    return region
+
+
 def validate_region(code):
     """This function will used to validate the region which user given"""
     try:
         region_list = public_holiday.get_available_regions()
-        print(region_list)
+        is_region_exists(code)
         if code in region_list:
             valid_code = code
         else:
@@ -195,15 +227,29 @@ def validate_region(code):
     return valid_code
 
 
+def update_ini(section, name, value):
+    """This method used to update the ini file"""
+    config.set(section, name, value)
+    with open(parent_dir + "/develop.ini", "w", encoding="utf-8") as file:
+        config.write(file)
+
+
 def main():
     """This is main function for this module"""
     parser = argparse.ArgumentParser(
         description="This argparser used for get dates fro user for fetching the data from api"
     )
     parser.add_argument(
-        "code",
-        help="Enter region code for the country",
+        "--add_regions",
+        help="Enter region code for the country in the format twl alpha 'XX'",
         type=validate_region,
+        nargs="+",
+    )
+    parser.add_argument(
+        "--regions",
+        help="Enter region code for the country in the format twl alpha 'XX'",
+        type=is_region_exists,
+        nargs="+",
     )
     parser.add_argument(
         "--start",
@@ -222,12 +268,15 @@ def main():
         help="Enter the endpoint from the Choices",
     )
     args = parser.parse_args()
-    fetch_data = FetchDataFromPublicHolidayApi()
-    fetch_data.fetch_next_public_holidays(
-        args.code, args.endpoint
-    ) if args.endpoint == "next_public_holidays" else fetch_data.get_data_for_given_year_region(
-        args.__dict__
-    )
+    fetch_data = FetchDataFromPublicHolidayApi(args.regions)
+    if args.add_regions:
+        fetch_data.add_regions(args)
+    for region in fetch_data.region_list:
+        fetch_data.fetch_next_public_holidays(
+            args.code, args.endpoint
+        ) if args.endpoint == "next_public_holidays" else fetch_data.get_data_for_given_year_region(
+            region, args.__dict__
+        )
 
 
 if __name__ == "__main__":

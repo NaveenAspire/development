@@ -68,12 +68,9 @@ class PublicHoliday:
         """This method will used to get the response from the endpoint as data frame"""
         try:
             response = requests.get(endpoint_with_params)
-            print(endpoint_with_params)
             if not response.status_code == 200:
                 raise ValueError("Invalid request")
             data_frame = pd.DataFrame.from_records([response.json()])
-            print(response.json())
-            print(data_frame)
         except Exception as err:
             print(err)
             data_frame = None

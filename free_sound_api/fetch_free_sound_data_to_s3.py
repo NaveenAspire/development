@@ -46,7 +46,9 @@ class FetchDataFromFreeSoundApi:
             if response is None:
                 sys.exit("Data does not get from api")
 
-            create_json = self.create_json_file(response, f"similar_sound_for_{sound_id}.json")
+            create_json = self.create_json_file(
+                response, f"similar_sound_for_{sound_id}.json"
+            )
             # key = os.path.join(
             #     self.section.get("similar_sound_bpath"),
             #     self.get_partition(today,id=sound_id),
@@ -56,7 +58,8 @@ class FetchDataFromFreeSoundApi:
             self.temp_s3.upload_local_s3(
                 create_json,
                 os.path.join(
-                    self.section.get("similar_sound_bpath"), self.get_partition(today,id=sound_id)
+                    self.section.get("similar_sound_bpath"),
+                    self.get_partition(today, id=sound_id),
                 ),
             )
             # shutil.rmtree(self.download_path)
@@ -124,12 +127,12 @@ class FetchDataFromFreeSoundApi:
             file_path = None
         return file_path
 
-    def get_partition(self, partition_variable,id=None):
+    def get_partition(self, partition_variable, id=None):
         """This method will make the partition based on given date
         Parameter :
             partition_variable : The date that to be partition"""
         try:
-            print("id :",id)
+            print("id :", id)
             date_obj = datetime.strptime(partition_variable, "%Y-%m-%d")
             partition_path = (
                 date_obj.strftime(f"pt_year=%Y/pt_month=%m/pt_day=%d/")

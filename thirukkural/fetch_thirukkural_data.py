@@ -48,10 +48,10 @@ class FetchThirukkuralData:
             data_frame = thirukkural.get_thirukkural(num)
             if data_frame is None:
                 raise ValueError("The response is None")
-            logger.info("Successfully get the thirukkural %s",num)
+            logger.info("Successfully get the thirukkural %s", num)
             self.create_json_file(data_frame, num)
         except Exception as err:
-            logger.error("Error occured while getting thirukkural %s",num)
+            logger.error("Error occured while getting thirukkural %s", num)
             print(err)
         return data_frame
 
@@ -117,7 +117,7 @@ def main():
     )
     args = parser.parse_args()
     fetch_data = FetchThirukkuralData()
-    
+
     fetch_data.get_response_for_given_input(args)
 
 
