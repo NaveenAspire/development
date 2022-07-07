@@ -47,7 +47,7 @@ class DynamoDB:
         except ClientError as err:
             print(err)
             sys.exit(f"Item is not read due to {err}")
-        return response["Item"]
+        return response
 
     def update_item(self, table_name, **kwargs):
         """This module will get item from the table"""
@@ -57,4 +57,4 @@ class DynamoDB:
         except ClientError as err:
             print(err)
             sys.exit(f"Item is not read due to {err}")
-        return response["Item"]
+        return response

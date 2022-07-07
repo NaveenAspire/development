@@ -4,6 +4,8 @@ file and store section values into the table and use them in script"""
 import argparse
 import ast
 import configparser
+from multiprocessing.dummy import Namespace
+from unicodedata import name
 from dynamodb import DynamoDB
 from logging_and_download_path import LoggingDownloadpath, parent_dir
 import os
@@ -24,17 +26,17 @@ class DynamodbConfig:
 
     def dynamodb_create_table(self, params):
         """This is the method to create the dynamodb table for the user given params"""
-        table = self.dynamodb.create_table(params)
+        table = self.dynamodb.create_table(**params)
         print(table)
 
-    def dynamodb_put_item_to_table(self, table_name, params):
+    def dynamodb_put_item_to_table(self, table_name, params):   
         """This is method used to insert the item into the dynamodb table"""
-        item_response = self.dynamodb.put_item(table_name, params)
+        item_response = self.dynamodb.put_item(table_name, **params)
         print(item_response)
 
     def update_item_to_table(self, table_name, params):
         """This method used to update the item into the dynamodb table"""
-        update_response = self.dynamodb.update_item(table_name, params)
+        update_response = self.dynamodb.update_item(table_name, **params)
         print(update_response)
 
 
@@ -56,8 +58,10 @@ def main():
     update_item.add_argument("table", type=str)
     update_item.add_argument("params", type=ast.literal_eval)
     args = parser.parse_args()
-
-    print(args.__dict__)
+    print("\n\n")
+    # print(type(args.params))
+    # dynomo_config = DynamodbConfig()
+    # dynomo_config.dynamodb_create_table(args.params)
 
 
 if __name__ == "__main__":

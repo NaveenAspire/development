@@ -1,7 +1,5 @@
-"""This module used to fetch data from thirukkural api endpoints
-and create the response as json then store json files into
-s3 with partition based on date"""
-
+"""This method is used to access the dynamodb and use it for python configuration."""
+from dynamodb import DynamoDB
 import argparse
 import configparser
 import os
@@ -13,17 +11,20 @@ from Temp_s3.temp_s3 import TempS3
 config = configparser.ConfigParser()
 config.read(os.path.join(parent_dir, "develop.ini"))
 logger_download = LoggingDownloadpath(config)
-logger = logger_download.set_logger("fetch_thirukkural_data")
+logger = logger_download.set_logger("access_dynamodb_data")
 
 
 class FetchThirukkuralData:
-    """This class for fetching data from sunrise_sunset api and create json
-    files for the response then upload those files into s3 with partition based on date"""
+    """This class for fetching data from thirukkural api and create json
+    files for the response then upload those files into s3 with partition based on thirukkural"""
 
     def __init__(self) -> None:
-        """This is init method for the class FetchDataFromSunriseSunsetApi"""
+        """This is init method for the class FetchThirukkuralData"""
         self.download_path = logger_download.set_downloadpath("fetch_thirukkural")
-        self.section = config["fetch_thirukkural"]
+        self.dynamodb = DynamoDB(config)
+        self.thirukkural_section = self.dynamodb.get_item(
+            "python_config", Key={"section_id": 1, "section_name": "thirukkural"}
+        ).get("Item")
 
     def get_response_for_given_input(self, args):
         """This method will get the response based on the user input"""
@@ -80,7 +81,7 @@ class FetchThirukkuralData:
         """This method will call the get parition method for
         getting partition path and upload to s3."""
         temp = TempS3(config, logger)
-        key = os.path.join(self.section.get("bucket_path"), partition_path)
+        key = os.path.join(self.thirukkural_section.get("bucket_path"), partition_path)
         temp.upload_local_s3(file_path, key)
         logger.info("File successfully uploaded to s3..")
 
@@ -117,9 +118,11 @@ def main():
     )
     args = parser.parse_args()
     fetch_data = FetchThirukkuralData()
+    
 
     fetch_data.get_response_for_given_input(args)
 
 
 if __name__ == "__main__":
     main()
+

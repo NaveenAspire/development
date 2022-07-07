@@ -6,7 +6,6 @@ import argparse
 import ast
 import configparser
 from datetime import datetime, date
-from genericpath import exists
 import os
 import sys
 from logging_and_download_path import LoggingDownloadpath, parent_dir
@@ -203,7 +202,7 @@ def is_region_exists(region):
     """This function will check if the regions are exists in list"""
     try:
         exists_list = config["public_holiday_api"]["region_list"]
-        if region in exists_list:
+        if region not in exists_list:
             raise Exception
     except Exception:
         print(f"The region {region} is already exists...")
@@ -273,7 +272,7 @@ def main():
         fetch_data.add_regions(args)
     for region in fetch_data.region_list:
         fetch_data.fetch_next_public_holidays(
-            args.code, args.endpoint
+            region, args.endpoint
         ) if args.endpoint == "next_public_holidays" else fetch_data.get_data_for_given_year_region(
             region, args.__dict__
         )
