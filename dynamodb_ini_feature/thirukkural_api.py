@@ -12,7 +12,6 @@ class Thirukkural:
         parameter :
             config_obj : ConfigParser object
         """
-        self.config = config_obj
         self.section = section
 
     def get_thirukkural(self, num):

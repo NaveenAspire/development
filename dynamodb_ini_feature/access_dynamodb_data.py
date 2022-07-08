@@ -7,6 +7,7 @@ import sys
 from logging_and_download_path import LoggingDownloadpath, parent_dir
 from thirukkural_api import Thirukkural
 from Temp_s3.temp_s3 import TempS3
+from demo_use import DDV
 
 config = configparser.ConfigParser()
 config.read(os.path.join(parent_dir, "develop.ini"))
@@ -21,10 +22,13 @@ class FetchThirukkuralData:
     def __init__(self) -> None:
         """This is init method for the class FetchThirukkuralData"""
         self.download_path = logger_download.set_downloadpath("fetch_thirukkural")
-        self.dynamodb = DynamoDB(config)
-        self.thirukkural_section = self.dynamodb.get_item(
-            "python_config", Key={"section_id": 1, "section_name": "thirukkural"}
-        ).get("Item")
+        # self.dynamodb = DynamoDB(config)
+        # self.thirukkural_section = self.dynamodb.get_item(
+        #     "python_config", Key={"section_id": 1, "section_name": "thirukkural"}
+        # ).get("Item")
+        mock_ddb = DDV()
+        self.thirukkural_section = mock_ddb.write_into_table()
+        print(self.thirukkural_section)
 
     def get_response_for_given_input(self, args):
         """This method will get the response based on the user input"""
@@ -118,11 +122,9 @@ def main():
     )
     args = parser.parse_args()
     fetch_data = FetchThirukkuralData()
-    
 
     fetch_data.get_response_for_given_input(args)
 
 
 if __name__ == "__main__":
     main()
-

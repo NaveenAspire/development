@@ -244,6 +244,7 @@ def main():
         sys.exit("The valid regions are added...")
 
     fetch_data.fetch_data_for_given_dates(args.s_date, args.e_date)
+    
 
 
 if __name__ == "__main__":

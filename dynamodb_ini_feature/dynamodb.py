@@ -4,25 +4,28 @@ python using boto3 and performs operations for dynamoDB"""
 import sys
 import boto3
 from botocore.exceptions import ClientError
+from moto import mock_dynamodb
 
-
+# @mock_dynamodb
 class DynamoDB:
     """This used to connect DynamoDB with python
     boto3 and has method for dynamoDB operations"""
 
-    def __init__(self, config_obj) -> None:
+    def __init__(self, dyna) -> None:
         """This is the init method for the class DynamoDB
         Parameter :
             config_obj = ConfigParser object"""
-        self.config = config_obj
-        self.section = config_obj["dynamoDB"]
-        self.dynamodb = boto3.resource("dynamodb")
+        # self.config = config_obj
+        # self.section = config_obj["dynamoDB"]
+        self.dynamodb = dyna
+        # boto3.resource('dynamodb',region_name='us-east-1')
 
     def create_table(self, **kwargs):
         """This method will create the table in dynamoDB
         Parameter :
         """
         try:
+            # print(self.dynamodb)
             response = self.dynamodb.create_table(**kwargs)
         except Exception as err:
             print(err)

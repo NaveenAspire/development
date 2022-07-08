@@ -1,22 +1,11 @@
 Create table:
 
-{'AttributeDefinitions':[{'AttributeName': 'section_id','AttributeType': 'N'},{'AttributeName': 'section_name','AttributeType': 'S'},{'AttributeName': 'section','AttributeType': 'S'}],'TableName':'python_config','KeySchema':[{'AttributeName': 'section_id','KeyType': 'HASH'},{'AttributeName': 'section_name','KeyType': 'RANGE'},],'ProvisionedThroughput':{'ReadCapacityUnits': 5,'WriteCapacityUnits': 5},}
+        {'AttributeDefinitions':[{'AttributeName': 'section_id','AttributeType': 'N'},{'AttributeName': 'section_name','AttributeType': 'S'},],'TableName':'python_config','KeySchema':[{'AttributeName': 'section_id','KeyType': 'HASH'},{'AttributeName': 'section_name','KeyType': 'RANGE'},],'ProvisionedThroughput':{'ReadCapacityUnits': 5,'WriteCapacityUnits': 5},}
 
 Put Item :
 
-{
-    'Item':{
-        'section_id': 1,
-        'section_name': 'thirukkural',
-        'section': {'thirukkural_endpoint':'https://api-thirukkural.vercel.app/api','bucket_path':'thirukkural/source/'}
-    }
-}
+{'Item':{'section_id': 1,'section_name': 'thirukkural','section': {'thirukkural_endpoint':'https://api-thirukkural.vercel.app/api','bucket_path':'thirukkural/source/'}}}
 
 Get Item :
 
-{
-    'Key':{
-        'section_id': 1,
-        'section_name': 'thirukkural'
-    }
-}
+{'Key':{'section_id': 1,'section_name': 'thirukkural'}}
