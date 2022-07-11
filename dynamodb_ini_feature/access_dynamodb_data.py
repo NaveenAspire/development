@@ -27,8 +27,7 @@ class FetchThirukkuralData:
         #     "python_config", Key={"section_id": 1, "section_name": "thirukkural"}
         # ).get("Item")
         mock_ddb = DDV()
-        self.thirukkural_section = mock_ddb.write_into_table()
-        print(self.thirukkural_section)
+        self.thirukkural_section = mock_ddb.get_section()
 
     def get_response_for_given_input(self, args):
         """This method will get the response based on the user input"""
@@ -49,7 +48,7 @@ class FetchThirukkuralData:
         Return : returns True or False"""
         try:
             print(f"Thirukkural - {num}")
-            thirukkural = Thirukkural(config)
+            thirukkural = Thirukkural(self.thirukkural_section)
             data_frame = thirukkural.get_thirukkural(num)
             if data_frame is None:
                 raise ValueError("The response is None")

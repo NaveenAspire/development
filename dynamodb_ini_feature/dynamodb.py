@@ -4,7 +4,6 @@ python using boto3 and performs operations for dynamoDB"""
 import sys
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_dynamodb
 
 # @mock_dynamodb
 class DynamoDB:
@@ -18,7 +17,8 @@ class DynamoDB:
         # self.config = config_obj
         # self.section = config_obj["dynamoDB"]
         self.dynamodb = dyna
-        # boto3.resource('dynamodb',region_name='us-east-1')
+        boto3.resource('dynamodb',region_name='us-east-1',aws_access_key_id="",
+            aws_secret_access_key="")
 
     def create_table(self, **kwargs):
         """This method will create the table in dynamoDB

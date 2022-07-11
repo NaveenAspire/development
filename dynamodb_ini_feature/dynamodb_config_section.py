@@ -73,8 +73,10 @@ def main(dynamodb):
     update_item.add_argument("update", type=ast.literal_eval)
     args = parser.parse_args()
     dynamo_config = DynamodbConfig(dynamodb)
+
+    print(args)
     
-    dynamo_config.call_operation_method(args.__dict__)
+    # dynamo_config.call_operation_method(args.__dict__)
 
 
 

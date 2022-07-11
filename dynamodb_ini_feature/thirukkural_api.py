@@ -26,7 +26,8 @@ class Thirukkural:
             if not response.status_code == 200:
                 raise ValueError("Invalid request")
             data_frame = pd.DataFrame.from_records([response.json()])
+            
         except Exception as err:
-            print(err)
+            # print(err)
             data_frame = None
         return data_frame
