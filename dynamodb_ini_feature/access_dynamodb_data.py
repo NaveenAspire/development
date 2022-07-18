@@ -28,6 +28,7 @@ class FetchThirukkuralData:
         # ).get("Item")
         mock_ddb = DDV()
         self.thirukkural_section = mock_ddb.get_section()
+        print(self.thirukkural_section)
 
     def get_response_for_given_input(self, args):
         """This method will get the response based on the user input"""
